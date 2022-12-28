@@ -1,0 +1,3 @@
+# Equivalent to make maliput::api::RoadNetwork::road_geometry() and obtain the RoadGeometry information.
+---
+RoadGeometry road_geometry

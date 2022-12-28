@@ -1,0 +1,4 @@
+# Equivalent to make maliput::api::RoadGeometry::ById()::GetJunction(id) and obtain the Junction information.
+JunctionId id
+---
+Junction junction
