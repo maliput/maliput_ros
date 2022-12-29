@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  PACKAGE_NAMES: maliput_ros_interfaces
+  PACKAGE_NAMES: maliput_ros_interfaces maliput_ros_translation
   ROS_DISTRO: foxy
 
 jobs:
