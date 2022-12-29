@@ -1,0 +1,17 @@
+# Example configuration for maliput_malidrive and to load the TShapeRoad.xodr map.
+# TODO: fix the path to the node.
+maliput:
+  backend: "maliput_malidrive"
+  parameters:
+    road_geometry_id: "t_shape_road"
+    opendrive_file: "/home/agalbachicar/maliput_ws_focal/install/maliput_malidrive/share/maliput_malidrive/resources/odr/TShapeRoad.xodr"
+    linear_tolerance: "0.001"
+    max_linear_tolerance: "0.01"
+    angular_tolerance: "0.001"
+    scale_length: "1.0"
+    inertial_to_backend_frame_translation: "{0, 0, 0}"
+    build_policy: "sequential"
+    num_threads: "1"
+    simplification_policy: "none"
+    standard_strictness_policy: "strict"
+    omit_nondrivable_lanes: "true"
