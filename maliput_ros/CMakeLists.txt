@@ -66,13 +66,6 @@ endif()
 # Export
 ##############################################################################
 
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
-
-ament_export_include_directories(include)
-
 ament_environment_hooks(setup.sh.in)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(yaml-cpp)
