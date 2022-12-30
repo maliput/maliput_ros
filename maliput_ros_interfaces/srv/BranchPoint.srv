@@ -1,0 +1,4 @@
+# Equivalent to make maliput::api::RoadGeometry::ById()::GetBranchPoint(id) and obtain the BranchPoint information.
+BranchPointId id
+---
+BranchPoint branch_point

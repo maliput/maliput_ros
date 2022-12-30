@@ -1,0 +1,4 @@
+# Equivalent to make maliput::api::RoadGeometry::ById()::GetLane(id) and obtain the Lane information.
+LaneId id
+---
+Lane lane
