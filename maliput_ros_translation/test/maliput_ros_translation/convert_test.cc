@@ -540,6 +540,56 @@ TEST_F(LaneToRosMessageTest, NullLane) {
   ASSERT_EQ(dut.id.id, kNullLaneId);
 }
 
+GTEST_TEST(BranchPointIdFromRosMessage, ValidateConversion) {
+  const std::string kBranchPointId{"branch_point_id"};
+  maliput_ros_interfaces::msg::BranchPointId msg;
+  msg.id = kBranchPointId;
+
+  const maliput::api::BranchPointId dut = FromRosMessage(msg);
+
+  ASSERT_EQ(dut.string(), kBranchPointId);
+}
+
+GTEST_TEST(JunctionIdFromRosMessage, ValidateConversion) {
+  const std::string kJunctionId{"junction_id"};
+  maliput_ros_interfaces::msg::JunctionId msg;
+  msg.id = kJunctionId;
+
+  const maliput::api::JunctionId dut = FromRosMessage(msg);
+
+  ASSERT_EQ(dut.string(), kJunctionId);
+}
+
+GTEST_TEST(LaneIdFromRosMessage, ValidateConversion) {
+  const std::string kLaneId{"lane_id"};
+  maliput_ros_interfaces::msg::LaneId msg;
+  msg.id = kLaneId;
+
+  const maliput::api::LaneId dut = FromRosMessage(msg);
+
+  ASSERT_EQ(dut.string(), kLaneId);
+}
+
+GTEST_TEST(RoadGeometryIdFromRosMessage, ValidateConversion) {
+  const std::string kRoadGeometryId{"road_geometry_id"};
+  maliput_ros_interfaces::msg::RoadGeometryId msg;
+  msg.id = kRoadGeometryId;
+
+  const maliput::api::RoadGeometryId dut = FromRosMessage(msg);
+
+  ASSERT_EQ(dut.string(), kRoadGeometryId);
+}
+
+GTEST_TEST(SegmentIdFromRosMessage, ValidateConversion) {
+  const std::string kSegmentId{"segment_id"};
+  maliput_ros_interfaces::msg::SegmentId msg;
+  msg.id = kSegmentId;
+
+  const maliput::api::SegmentId dut = FromRosMessage(msg);
+
+  ASSERT_EQ(dut.string(), kSegmentId);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation
