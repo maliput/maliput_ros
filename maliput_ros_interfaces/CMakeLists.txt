@@ -54,7 +54,7 @@ set(SERVICE_MSGS
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${MESSAGES}
   ${SERVICE_MSGS}
-  DEPENDENCIES builtin_interfaces
+  DEPENDENCIES builtin_interfaces geometry_msgs
   ADD_LINTER_TESTS
 )
 
