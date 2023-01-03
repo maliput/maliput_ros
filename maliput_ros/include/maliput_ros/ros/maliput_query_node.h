@@ -46,10 +46,19 @@ namespace ros {
 /// MaliputQueryNode is a LifecycleNode that serves as proxy to a maliput::api::RoadNetwork
 /// set of queries.
 ///
-/// It defines the following parameters:
+/// It defines the following ROS parameters:
 /// - yaml_configuration_path: a string which contains the path to a YAML file. The YAML is parsed
 ///   with maliput_ros::utils::LoadYamlConfigFile() to obtain a maliput_ros::utils::MaliputRoadNetworkConfiguration
-///   and then use it to create a maliput::api::RoadNetwork from it.
+///   and then use it to create a maliput::api::RoadNetwork from it. The YAML file must have the following structure:
+/// @code {.yaml}
+/// maliput:"
+///   backend: <backend_name> "
+///   parameters: "
+///      <key_1>: <value_1> "
+///      <key_2>: <value_2> "
+///      // ...
+///      <key_N>: <value_N> "
+/// @endcode
 ///
 /// The following depicts what this node does on each state transtion:
 /// - MaliputQueryNode::on_configure(): the maliput::api::RoadNetwork, the MaliputQuery and the services are created.
@@ -63,20 +72,12 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  public:
   using LifecyleNodeCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-  /// Create a new MaliputQueryNode node with the specified name.
-  ///
-  /// Forwards a call: MaliputQueryNode(node_name, "", options) to signal empty namespace.
-  /// @param[in] node_name Name of the node.
-  /// @param[in] options Additional options to control creation of the node.
-  MaliputQueryNode(const std::string& node_name, const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
-      : MaliputQueryNode(node_name, "", options) {}
-
-  /// Create a node based on the node name and a rclcpp::Context.
+  /// Create a node based on the node name, namespace and rclcpp::Context.
   ///
   /// @param[in] node_name Name of the node.
   /// @param[in] namespace_ Namespace of the node.
   /// @param[in] options Additional options to control creation of the node.
-  MaliputQueryNode(const std::string& node_name, const std::string& namespace_,
+  MaliputQueryNode(const std::string& node_name, const std::string& namespace_ = "",
                    const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
  private:

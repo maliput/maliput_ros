@@ -42,18 +42,19 @@ def generate_launch_description():
         default_value='',
         description='Path to the YAML file containing the maliput plugin configuration.')
     
-    # The query server node.
+    # The maliput_query_server node.
     maliput_query_server_node = launch_ros.actions.LifecycleNode(
-        package='maliput_ros', executable='maliput_ros', name='query_server', output='screen',
+        package='maliput_ros', executable='maliput_ros', name='maliput_query_server',
+        namespace='maliput_ros', output='screen',
         parameters=[{"yaml_configuration_path": maliput_yaml_path}])
     
-    # When the query_server reaches the 'inactive' state, make it take the 'activate' transition.
-    register_event_handler_for_query_server_reaches_inactive_state = launch.actions.RegisterEventHandler(
+    # When the maliput_query_server reaches the 'inactive' state, make it take the 'activate' transition.
+    register_event_handler_for_maliput_query_server_reaches_inactive_state = launch.actions.RegisterEventHandler(
         launch_ros.event_handlers.OnStateTransition(
             target_lifecycle_node=maliput_query_server_node, goal_state='inactive',
             entities=[
                 launch.actions.LogInfo(
-                    msg="node 'query_server' reached the 'inactive' state, 'activating'."),
+                    msg="node 'maliput_query_server' reached the 'inactive' state, 'activating'."),
                 launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
                     lifecycle_node_matcher=launch.events.matches_action(maliput_query_server_node),
                     transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
@@ -62,19 +63,18 @@ def generate_launch_description():
         )
     )
 
-    # When the query_server node reaches the 'active' state, log a message.
-    register_event_handler_for_query_server_reaches_active_state = launch.actions.RegisterEventHandler(
+    # When the maliput_query_server node reaches the 'active' state, log a message.
+    register_event_handler_for_maliput_query_server_reaches_active_state = launch.actions.RegisterEventHandler(
         launch_ros.event_handlers.OnStateTransition(
             target_lifecycle_node=maliput_query_server_node, goal_state='active',
             entities=[
-                launch.actions.LogInfo(
-                    msg="node 'query_server' reached the 'active' state, launching 'listener'."),
+                launch.actions.LogInfo(msg="node 'maliput_query_server' reached the 'active' state."),
             ],
         )
     )
 
-    # Make the talker node take the 'configure' transition.
-    emit_event_to_request_that_query_server_does_configure_transition = launch.actions.EmitEvent(
+    # Make the maliput_query_server node take the 'configure' transition.
+    emit_event_to_request_that_maliput_query_server_does_configure_transition = launch.actions.EmitEvent(
         event=launch_ros.events.lifecycle.ChangeState(
             lifecycle_node_matcher=launch.events.matches_action(maliput_query_server_node),
             transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
@@ -83,8 +83,8 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         maliput_yaml_path_arg,
-        register_event_handler_for_query_server_reaches_inactive_state,
-        register_event_handler_for_query_server_reaches_active_state,
+        register_event_handler_for_maliput_query_server_reaches_inactive_state,
+        register_event_handler_for_maliput_query_server_reaches_active_state,
         maliput_query_server_node,
-        emit_event_to_request_that_query_server_does_configure_transition,
+        emit_event_to_request_that_maliput_query_server_does_configure_transition,
     ])
