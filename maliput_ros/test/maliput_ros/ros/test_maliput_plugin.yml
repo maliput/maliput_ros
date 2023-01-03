@@ -1,0 +1,4 @@
+maliput:
+  backend: "maliput_ros_road_network_plugin"
+  parameters:
+    prop1: "value1"

@@ -43,30 +43,23 @@ namespace ros {
 namespace test {
 namespace {
 
+// Test class for MaliputQuery.
 class MaliputQueryTest : public ::testing::Test {
  public:
   void SetUp() override {
     auto road_geometry = std::make_unique<RoadGeometryMock>();
     road_geometry_ptr_ = road_geometry.get();
     auto road_rulebook = std::make_unique<RoadRulebookMock>();
-    road_rulebook_ptr_ = road_rulebook.get();
     auto traffic_light_book = std::make_unique<TrafficLightBookMock>();
-    traffic_light_book_ptr_ = traffic_light_book.get();
     auto intersection_book = std::make_unique<IntersectionBookMock>();
-    intersection_book_ptr_ = intersection_book.get();
     auto phase_ring_book = std::make_unique<PhaseRingBookMock>();
-    phase_ring_book_ptr_ = phase_ring_book.get();
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto right_of_way_rule_state_provider = std::make_unique<RightOfWayRuleStateProviderMock>();
-    right_of_way_rule_state_provider_ptr_ = right_of_way_rule_state_provider.get();
 #pragma GCC diagnostic pop
     auto phase_provider = std::make_unique<PhaseProviderMock>();
-    phase_provider_ptr_ = phase_provider.get();
     auto discrete_value_rule_state_provider = std::make_unique<DiscreteValueRuleStateProviderMock>();
-    discrete_value_rule_state_provider_ptr_ = discrete_value_rule_state_provider.get();
     auto range_value_rule_state_provider = std::make_unique<RangeValueRuleStateProviderMock>();
-    range_value_rule_state_provider_ptr_ = range_value_rule_state_provider.get();
 
     auto road_network = std::make_unique<maliput::api::RoadNetwork>(
         std::move(road_geometry), std::move(road_rulebook), std::move(traffic_light_book), std::move(intersection_book),
@@ -78,22 +71,16 @@ class MaliputQueryTest : public ::testing::Test {
   }
 
   RoadGeometryMock* road_geometry_ptr_{};
-  RoadRulebookMock* road_rulebook_ptr_{};
-  TrafficLightBookMock* traffic_light_book_ptr_{};
-  IntersectionBookMock* intersection_book_ptr_{};
-  PhaseRingBookMock* phase_ring_book_ptr_{};
-  RightOfWayRuleStateProviderMock* right_of_way_rule_state_provider_ptr_{};
-  PhaseProviderMock* phase_provider_ptr_{};
-  DiscreteValueRuleStateProviderMock* discrete_value_rule_state_provider_ptr_{};
-  RangeValueRuleStateProviderMock* range_value_rule_state_provider_ptr_{};
   std::unique_ptr<MaliputQuery> dut_;
 };
 
+// Makes sure the maliput::api::RoadNetwork is not nullptr when constructing MaliputQuery.
 TEST_F(MaliputQueryTest, ConstructorValidation) {
   std::unique_ptr<maliput::api::RoadNetwork> road_network{};
   ASSERT_THROW({ MaliputQuery(std::move(road_network)); }, maliput::common::assertion_error);
 }
 
+// Validates the maliput::api::RoadGeometry pointer.
 TEST_F(MaliputQueryTest, RoadGeometry) {
   ASSERT_EQ(dut_->road_geometry(), static_cast<const maliput::api::RoadGeometry*>(road_geometry_ptr_));
 }

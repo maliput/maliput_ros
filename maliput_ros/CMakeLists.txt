@@ -13,6 +13,7 @@ message(STATUS "\n\n====== Finding 3rd Party Packages ======\n")
 
 find_package(ament_cmake REQUIRED)
 find_package(maliput REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 find_package(maliput_ros_interfaces REQUIRED)
 find_package(maliput_ros_translation REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -89,6 +90,7 @@ install(DIRECTORY
 
 ament_environment_hooks(setup.sh.in)
 ament_export_dependencies(ament_cmake)
+ament_export_dependencies(lifecycle_msgs)
 ament_export_dependencies(maliput)
 ament_export_dependencies(maliput_ros_interfaces)
 ament_export_dependencies(maliput_ros_translation)
