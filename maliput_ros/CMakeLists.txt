@@ -82,6 +82,11 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
+install(DIRECTORY
+  resources
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 ament_environment_hooks(setup.sh.in)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(maliput)
