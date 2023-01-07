@@ -25,3 +25,4 @@ jobs:
       with:
         package-name: ${{ env.PACKAGE_NAMES }}
         target-ros2-distro: ${{ env.ROS_DISTRO }}
+        vcs-repo-file-url: ${GITHUB_WORKSPACE}/.github/dependencies.repos
