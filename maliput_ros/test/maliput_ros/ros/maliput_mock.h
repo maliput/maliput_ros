@@ -164,6 +164,67 @@ class RangeValueRuleStateProviderMock final : public maliput::api::rules::RangeV
               (const maliput::api::RoadPosition&, const maliput::api::rules::Rule::TypeId&, double), (const));
 };
 
+/// @brief Google mock maliput::api::BranchPoint.
+class BranchPointMock final : public maliput::api::BranchPoint {
+ public:
+  MOCK_METHOD(maliput::api::BranchPointId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetConfluentBranches, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetOngoingBranches, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(std::optional<maliput::api::LaneEnd>, DoGetDefaultBranch, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetASide, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetBSide, (), (const));
+};
+
+/// @brief Google mock maliput::api::Lane.
+class LaneMock final : public maliput::api::Lane {
+ public:
+  MOCK_METHOD(maliput::api::LaneId, do_id, (), (const));
+  MOCK_METHOD(int, do_index, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, do_segment, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_to_left, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_to_right, (), (const));
+  MOCK_METHOD(double, do_length, (), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, DoGetBranchPoint, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(std::optional<maliput::api::LaneEnd>, DoGetDefaultBranch, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(maliput::api::RBounds, do_lane_bounds, (double), (const));
+  MOCK_METHOD(maliput::api::RBounds, do_segment_bounds, (double), (const));
+  MOCK_METHOD(maliput::api::HBounds, do_elevation_bounds, (double, double), (const));
+  MOCK_METHOD(maliput::api::InertialPosition, DoToInertialPosition, (const maliput::api::LanePosition&), (const));
+  MOCK_METHOD(maliput::api::Rotation, DoGetOrientation, (const maliput::api::LanePosition&), (const));
+  MOCK_METHOD(maliput::api::LanePosition, DoEvalMotionDerivatives,
+              (const maliput::api::LanePosition&, const maliput::api::IsoLaneVelocity&), (const));
+  MOCK_METHOD(maliput::api::LanePositionResult, DoToLanePosition, (const maliput::api::InertialPosition&), (const));
+  MOCK_METHOD(maliput::api::LanePositionResult, DoToSegmentPosition, (const maliput::api::InertialPosition&), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetConfluentBranches, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetOngoingBranches, (const maliput::api::LaneEnd::Which), (const));
+};
+
+/// @brief Google mock maliput::api::LaneEndSet.
+class LaneEndSetMock final : public maliput::api::LaneEndSet {
+ public:
+  MOCK_METHOD(int, do_size, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEnd&, do_get, (int), (const));
+};
+
+/// @brief Google mock maliput::api::SegmentMock.
+class SegmentMock final : public maliput::api::Segment {
+ public:
+  MOCK_METHOD(maliput::api::SegmentId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::Junction*, do_junction, (), (const));
+  MOCK_METHOD(int, do_num_lanes, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_lane, (int), (const));
+};
+
+/// @brief Google mock maliput::api::JunctionMock.
+class JunctionMock final : public maliput::api::Junction {
+ public:
+  MOCK_METHOD(maliput::api::JunctionId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
+  MOCK_METHOD(int, do_num_segments, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, do_segment, (int), (const));
+};
+
 }  // namespace test
 }  // namespace ros
 }  // namespace maliput_ros
