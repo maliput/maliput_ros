@@ -32,6 +32,7 @@
 #include <functional>
 #include <stdexcept>
 
+#include <maliput/api/junction.h>
 #include <maliput/api/road_network.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/plugin/create_road_network.h>
@@ -66,6 +67,22 @@ void MaliputQueryNode::RoadGeometryCallback(
   response->road_geometry = maliput_ros_translation::ToRosMessage(maliput_query_->road_geometry());
 }
 
+void MaliputQueryNode::JunctionCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::Junction::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::Junction::Response> response) const {
+  RCLCPP_INFO(get_logger(), "JunctionCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  if (request->id.id.empty()) {
+    RCLCPP_ERROR(get_logger(), "Request /junction with invalid value for JunctionId.");
+    return;
+  }
+  response->junction = maliput_ros_translation::ToRosMessage(
+      maliput_query_->GetJunctionBy(maliput_ros_translation::FromRosMessage(request->id)));
+}
+
 std::string MaliputQueryNode::GetMaliputYamlFilePath() const {
   return this->get_parameter(kYamlConfigurationPath).get_parameter_value().get<std::string>();
 }
@@ -93,6 +110,7 @@ void MaliputQueryNode::TearDownMaliputQuery() {
 
 bool MaliputQueryNode::InitializeAllServices() {
   RCLCPP_INFO(get_logger(), "InitializeAllServices");
+
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
