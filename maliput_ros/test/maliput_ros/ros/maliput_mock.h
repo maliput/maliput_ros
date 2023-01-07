@@ -53,79 +53,80 @@ namespace test {
 /// @brief Google mock maliput::api::RoadGeometry.
 class RoadGeometryMock final : public maliput::api::RoadGeometry {
  public:
-  MOCK_CONST_METHOD0(do_id, maliput::api::RoadGeometryId());
-  MOCK_CONST_METHOD0(do_num_junctions, int());
-  MOCK_CONST_METHOD1(do_junction, const maliput::api::Junction*(int));
-  MOCK_CONST_METHOD0(do_num_branch_points, int());
-  MOCK_CONST_METHOD1(do_branch_point, const maliput::api::BranchPoint*(int));
-  MOCK_CONST_METHOD0(DoById, const maliput::api::RoadGeometry::IdIndex&());
-  MOCK_CONST_METHOD2(DoToRoadPosition,
-                     maliput::api::RoadPositionResult(const maliput::api::InertialPosition&,
-                                                      const std::optional<maliput::api::RoadPosition>&));
-  MOCK_CONST_METHOD2(DoFindRoadPositions,
-                     std::vector<maliput::api::RoadPositionResult>(const maliput::api::InertialPosition&, double));
-  MOCK_CONST_METHOD0(do_linear_tolerance, double());
-  MOCK_CONST_METHOD0(do_angular_tolerance, double());
-  MOCK_CONST_METHOD0(do_scale_length, double());
-  MOCK_CONST_METHOD2(DoSampleAheadWaypoints,
-                     std::vector<maliput::api::InertialPosition>(const maliput::api::LaneSRoute&, double));
-  MOCK_CONST_METHOD0(do_inertial_to_backend_frame_translation, maliput::math::Vector3());
+  MOCK_METHOD(maliput::api::RoadGeometryId, do_id, (), (const));
+  MOCK_METHOD(int, do_num_junctions, (), (const));
+  MOCK_METHOD(const maliput::api::Junction*, do_junction, (int), (const));
+  MOCK_METHOD(int, do_num_branch_points, (), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, do_branch_point, (int), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry::IdIndex&, DoById, (), (const));
+  MOCK_METHOD(maliput::api::RoadPositionResult, DoToRoadPosition,
+              (const maliput::api::InertialPosition&, const std::optional<maliput::api::RoadPosition>&), (const));
+  MOCK_METHOD(std::vector<maliput::api::RoadPositionResult>, DoFindRoadPositions,
+              (const maliput::api::InertialPosition&, double), (const));
+  MOCK_METHOD(double, do_linear_tolerance, (), (const));
+  MOCK_METHOD(double, do_angular_tolerance, (), (const));
+  MOCK_METHOD(double, do_scale_length, (), (const));
+  MOCK_METHOD(std::vector<maliput::api::InertialPosition>, DoSampleAheadWaypoints,
+              (const maliput::api::LaneSRoute&, double), (const));
+  MOCK_METHOD(maliput::math::Vector3, do_inertial_to_backend_frame_translation, (), (const));
 };
 
 /// @brief Google mock maliput::api::rules::RoadRulebook.
 class RoadRulebookMock final : public maliput::api::rules::RoadRulebook {
  public:
-  MOCK_CONST_METHOD2(DoFindRules,
-                     maliput::api::rules::RoadRulebook::QueryResults(const std::vector<maliput::api::LaneSRange>&,
-                                                                     double));
-  MOCK_CONST_METHOD0(DoRules, maliput::api::rules::RoadRulebook::QueryResults());
+  MOCK_METHOD(maliput::api::rules::RoadRulebook::QueryResults, DoFindRules,
+              (const std::vector<maliput::api::LaneSRange>&, double), (const));
+  MOCK_METHOD(maliput::api::rules::RoadRulebook::QueryResults, DoRules, (), (const));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  MOCK_CONST_METHOD1(DoGetRule, maliput::api::rules::RightOfWayRule(const maliput::api::rules::RightOfWayRule::Id&));
-  MOCK_CONST_METHOD1(DoGetRule, maliput::api::rules::SpeedLimitRule(const maliput::api::rules::SpeedLimitRule::Id&));
-  MOCK_CONST_METHOD1(DoGetRule,
-                     maliput::api::rules::DirectionUsageRule(const maliput::api::rules::DirectionUsageRule::Id&));
+  MOCK_METHOD(maliput::api::rules::RightOfWayRule, DoGetRule, (const maliput::api::rules::RightOfWayRule::Id&),
+              (const));
+  MOCK_METHOD(maliput::api::rules::SpeedLimitRule, DoGetRule, (const maliput::api::rules::SpeedLimitRule::Id&),
+              (const));
+  MOCK_METHOD(maliput::api::rules::DirectionUsageRule, DoGetRule, (const maliput::api::rules::DirectionUsageRule::Id&),
+              (const));
 #pragma GCC diagnostic pop
-  MOCK_CONST_METHOD1(DoGetDiscreteValueRule,
-                     maliput::api::rules::DiscreteValueRule(const maliput::api::rules::Rule::Id&));
-  MOCK_CONST_METHOD1(DoGetRangeValueRule, maliput::api::rules::RangeValueRule(const maliput::api::rules::Rule::Id&));
+  MOCK_METHOD(maliput::api::rules::DiscreteValueRule, DoGetDiscreteValueRule, (const maliput::api::rules::Rule::Id&),
+              (const));
+  MOCK_METHOD(maliput::api::rules::RangeValueRule, DoGetRangeValueRule, (const maliput::api::rules::Rule::Id&),
+              (const));
 };
 
 /// @brief Google mock maliput::api::rules::TrafficLightBook.
 class TrafficLightBookMock final : public maliput::api::rules::TrafficLightBook {
  public:
-  MOCK_CONST_METHOD1(DoGetTrafficLight,
-                     const maliput::api::rules::TrafficLight*(const maliput::api::rules::TrafficLight::Id&));
-  MOCK_CONST_METHOD0(DoTrafficLights, std::vector<const maliput::api::rules::TrafficLight*>());
+  MOCK_METHOD(const maliput::api::rules::TrafficLight*, DoGetTrafficLight,
+              (const maliput::api::rules::TrafficLight::Id&), (const));
+  MOCK_METHOD(std::vector<const maliput::api::rules::TrafficLight*>, DoTrafficLights, (), (const));
 };
 
 /// @brief Google mock maliput::api::IntersectionBook.
 class IntersectionBookMock final : public maliput::api::IntersectionBook {
  public:
-  MOCK_METHOD0(DoGetIntersections, std::vector<maliput::api::Intersection*>());
-  MOCK_METHOD1(DoGetIntersection, maliput::api::Intersection*(const maliput::api::Intersection::Id&));
-  MOCK_METHOD1(DoGetFindIntersection, maliput::api::Intersection*(const maliput::api::rules::TrafficLight::Id&));
-  MOCK_METHOD1(DoGetFindIntersection, maliput::api::Intersection*(const maliput::api::rules::DiscreteValueRule::Id&));
-  MOCK_METHOD1(DoGetFindIntersection, maliput::api::Intersection*(const maliput::api::InertialPosition&));
+  MOCK_METHOD(std::vector<maliput::api::Intersection*>, DoGetIntersections, ());
+  MOCK_METHOD(maliput::api::Intersection*, DoGetIntersection, (const maliput::api::Intersection::Id&));
+  MOCK_METHOD(maliput::api::Intersection*, DoGetFindIntersection, (const maliput::api::rules::TrafficLight::Id&));
+  MOCK_METHOD(maliput::api::Intersection*, DoGetFindIntersection, (const maliput::api::rules::DiscreteValueRule::Id&));
+  MOCK_METHOD(maliput::api::Intersection*, DoGetFindIntersection, (const maliput::api::InertialPosition&));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  MOCK_METHOD1(DoGetFindIntersection, maliput::api::Intersection*(const maliput::api::rules::RightOfWayRule::Id&));
+  MOCK_METHOD(maliput::api::Intersection*, DoGetFindIntersection, (const maliput::api::rules::RightOfWayRule::Id&));
 #pragma GCC diagnostic pop
 };
 
 /// @brief Google mock maliput::api::rules::PhaseRingBook.
 class PhaseRingBookMock : public maliput::api::rules::PhaseRingBook {
  public:
-  MOCK_CONST_METHOD0(DoGetPhaseRings, std::vector<maliput::api::rules::PhaseRing::Id>());
-  MOCK_CONST_METHOD1(DoGetPhaseRing,
-                     std::optional<maliput::api::rules::PhaseRing>(const maliput::api::rules::PhaseRing::Id&));
+  MOCK_METHOD(std::vector<maliput::api::rules::PhaseRing::Id>, DoGetPhaseRings, (), (const));
+  MOCK_METHOD(std::optional<maliput::api::rules::PhaseRing>, DoGetPhaseRing,
+              (const maliput::api::rules::PhaseRing::Id&), (const));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  MOCK_CONST_METHOD1(DoFindPhaseRing,
-                     std::optional<maliput::api::rules::PhaseRing>(const maliput::api::rules::RightOfWayRule::Id&));
+  MOCK_METHOD(std::optional<maliput::api::rules::PhaseRing>, DoFindPhaseRing,
+              (const maliput::api::rules::RightOfWayRule::Id&), (const));
 #pragma GCC diagnostic pop
-  MOCK_CONST_METHOD1(DoFindPhaseRing,
-                     std::optional<maliput::api::rules::PhaseRing>(const maliput::api::rules::Rule::Id&));
+  MOCK_METHOD(std::optional<maliput::api::rules::PhaseRing>, DoFindPhaseRing, (const maliput::api::rules::Rule::Id&),
+              (const));
 };
 
 #pragma GCC diagnostic push
@@ -133,36 +134,34 @@ class PhaseRingBookMock : public maliput::api::rules::PhaseRingBook {
 /// @brief Google mock maliput::api::rules::RightOfWayRuleStateProvider.
 class RightOfWayRuleStateProviderMock final : public maliput::api::rules::RightOfWayRuleStateProvider {
  public:
-  MOCK_CONST_METHOD1(DoGetState, std::optional<maliput::api::rules::RightOfWayRuleStateProvider::RightOfWayResult>(
-                                     const maliput::api::rules::RightOfWayRule::Id&));
+  MOCK_METHOD(std::optional<maliput::api::rules::RightOfWayRuleStateProvider::RightOfWayResult>, DoGetState,
+              (const maliput::api::rules::RightOfWayRule::Id&), (const));
 };
 #pragma GCC diagnostic pop
 
 /// @brief Google mock maliput::api::rules::PhaseProvider.
 class PhaseProviderMock final : public maliput::api::rules::PhaseProvider {
  public:
-  MOCK_CONST_METHOD1(
-      DoGetPhase, std::optional<maliput::api::rules::PhaseProvider::Result>(const maliput::api::rules::PhaseRing::Id&));
+  MOCK_METHOD(std::optional<maliput::api::rules::PhaseProvider::Result>, DoGetPhase,
+              (const maliput::api::rules::PhaseRing::Id&), (const));
 };
 
 /// @brief Google mock maliput::api::rules::DiscreteValueRuleStateProvider.
 class DiscreteValueRuleStateProviderMock final : public maliput::api::rules::DiscreteValueRuleStateProvider {
  public:
-  MOCK_CONST_METHOD1(DoGetState, std::optional<maliput::api::rules::DiscreteValueRuleStateProvider::StateResult>(
-                                     const maliput::api::rules::Rule::Id&));
-  MOCK_CONST_METHOD3(DoGetState,
-                     std::optional<maliput::api::rules::DiscreteValueRuleStateProvider::StateResult>(
-                         const maliput::api::RoadPosition&, const maliput::api::rules::Rule::TypeId&, double));
+  MOCK_METHOD(std::optional<maliput::api::rules::DiscreteValueRuleStateProvider::StateResult>, DoGetState,
+              (const maliput::api::rules::Rule::Id&), (const));
+  MOCK_METHOD(std::optional<maliput::api::rules::DiscreteValueRuleStateProvider::StateResult>, DoGetState,
+              (const maliput::api::RoadPosition&, const maliput::api::rules::Rule::TypeId&, double), (const));
 };
 
 /// @brief Google mock maliput::api::rules::RangeValueRuleStateProvider.
 class RangeValueRuleStateProviderMock final : public maliput::api::rules::RangeValueRuleStateProvider {
  public:
-  MOCK_CONST_METHOD1(DoGetState, std::optional<maliput::api::rules::RangeValueRuleStateProvider::StateResult>(
-                                     const maliput::api::rules::Rule::Id&));
-  MOCK_CONST_METHOD3(DoGetState,
-                     std::optional<maliput::api::rules::RangeValueRuleStateProvider::StateResult>(
-                         const maliput::api::RoadPosition&, const maliput::api::rules::Rule::TypeId&, double));
+  MOCK_METHOD(std::optional<maliput::api::rules::RangeValueRuleStateProvider::StateResult>, DoGetState,
+              (const maliput::api::rules::Rule::Id&), (const));
+  MOCK_METHOD(std::optional<maliput::api::rules::RangeValueRuleStateProvider::StateResult>, DoGetState,
+              (const maliput::api::RoadPosition&, const maliput::api::rules::Rule::TypeId&, double), (const));
 };
 
 }  // namespace test
