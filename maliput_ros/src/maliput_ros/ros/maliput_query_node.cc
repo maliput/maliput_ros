@@ -50,9 +50,7 @@ MaliputQueryNode::MaliputQueryNode(const std::string& node_name, const std::stri
   rcl_interfaces::msg::ParameterDescriptor maliput_plugin_yaml_file_path_descriptor;
   maliput_plugin_yaml_file_path_descriptor.name = kYamlConfigurationPath;
   maliput_plugin_yaml_file_path_descriptor.description = kYamlConfigurationPathDescription;
-  // TODO(agalbachicar): this has been enabled for testing. We should pass in the proper context
-  //                     to the node to make it read only.
-  maliput_plugin_yaml_file_path_descriptor.read_only = false;
+  maliput_plugin_yaml_file_path_descriptor.read_only = true;
   this->declare_parameter(maliput_plugin_yaml_file_path_descriptor.name, rclcpp::ParameterValue(std::string{}),
                           maliput_plugin_yaml_file_path_descriptor);
 }

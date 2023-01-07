@@ -142,36 +142,26 @@ TEST_F(MaliputQueryNodeTest, DefineYamlConfigurationPathParameter) {
 }
 
 // Makes sure the "yaml_configuration_path" parameter can be set.
-// TODO(agalbachicar): this has been enabled for testing. We should pass in the proper context
-//                     to the node to make it read only.
 TEST_F(MaliputQueryNodeTest, CanSetYamlConfigurationPathParameter) {
-  const rclcpp::Parameter yaml_configuration_path_parameter{kYamlConfigurationPathParameterName,
-                                                            rclcpp::ParameterValue("a_path")};
-  // Callback for parameter setting.
-  bool parameter_was_set{false};
-  auto callback_parameter_set = [&parameter_was_set](const std::vector<rclcpp::Parameter>& parameters) {
-    parameter_was_set = true;
-    rcl_interfaces::msg::SetParametersResult result;
-    result.successful = true;
-    return result;
-  };
+  static constexpr const char* kParameterValue = "a_path";
+  const rclcpp::NodeOptions kNodeOptions = rclcpp::NodeOptions().append_parameter_override(
+      kYamlConfigurationPathParameterName, rclcpp::ParameterValue(kParameterValue));
 
-  auto dut = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace);
-  auto unused_callback_handle = dut->add_on_set_parameters_callback(callback_parameter_set);
+  auto dut = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace, kNodeOptions);
 
-  ASSERT_TRUE(dut->set_parameter(yaml_configuration_path_parameter).successful);
-  ASSERT_TRUE(parameter_was_set);
+  ASSERT_EQ(kParameterValue, dut->get_parameter(kYamlConfigurationPathParameterName).as_string());
 }
 
 // Evaluates that the transition to the configure state tries to load the YAML configuration.
 // Upon a bad file, this transition fails.
 TEST_F(MaliputQueryNodeTest, WrongYamlConfigurationPathMakesTheConfigurationStageToFail) {
-  const rclcpp::Parameter yaml_configuration_path_parameter{kYamlConfigurationPathParameterName,
-                                                            rclcpp::ParameterValue("wrong_file_path")};
+  static constexpr const char* kParameterValue = "wrong_file_path";
+  const rclcpp::NodeOptions kNodeOptions = rclcpp::NodeOptions().append_parameter_override(
+      kYamlConfigurationPathParameterName, rclcpp::ParameterValue(kParameterValue));
+
   auto ret = kCallbackFailure;
 
-  auto dut = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace);
-  ASSERT_TRUE(dut->set_parameter(yaml_configuration_path_parameter).successful);
+  auto dut = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace, kNodeOptions);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, dut->get_current_state().id());
   dut->trigger_transition(rclcpp_lifecycle::Transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE), ret);
   ASSERT_EQ(kCallbackFailure, ret);
@@ -205,8 +195,7 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
     ASSERT_TRUE(setenv(kEnvName, kRoadNetowrkMockPluginPath, kReplace) == 0);
 
     // Load the YAML configuration file for the node.
-    dut_ = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace);
-    ASSERT_TRUE(dut_->set_parameter(kYamlConfigurationPathParameter).successful);
+    dut_ = std::make_shared<MaliputQueryNode>(kNodeName, kNodeNamespace, kNodeOptions);
   }
 
   void TearDown() override {
@@ -235,8 +224,8 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   std::shared_ptr<MaliputQueryNode> dut_{};
 
  private:
-  const rclcpp::Parameter kYamlConfigurationPathParameter{kYamlConfigurationPathParameterName,
-                                                          rclcpp::ParameterValue(kYamlFilePath)};
+  const rclcpp::NodeOptions kNodeOptions = rclcpp::NodeOptions().append_parameter_override(
+      kYamlConfigurationPathParameterName, rclcpp::ParameterValue(kYamlFilePath));
   std::string back_up_env_{};
 };
 
