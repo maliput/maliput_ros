@@ -32,6 +32,7 @@
 #include <memory>
 #include <utility>
 
+#include <maliput/api/junction.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
 #include <maliput/common/maliput_throw.h>
@@ -52,6 +53,13 @@ class MaliputQuery final {
 
   /// @return The maliput::api::RoadGeometry.
   inline const maliput::api::RoadGeometry* road_geometry() const { return road_network_->road_geometry(); }
+
+  /// Finds a maliput::api::Junction by its ID.
+  /// @param[in] id The maliput::api::JunctionId.
+  /// @return A maliput::api::Junction when @p id refers to a valid maliput::api::Junction. Otherwise, nullptr..
+  inline const maliput::api::Junction* GetJunctionBy(const maliput::api::JunctionId& id) const {
+    return road_network_->road_geometry()->ById().GetJunction(id);
+  }
 
  private:
   std::unique_ptr<maliput::api::RoadNetwork> road_network_{};

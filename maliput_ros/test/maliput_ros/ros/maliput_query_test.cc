@@ -43,6 +43,9 @@ namespace ros {
 namespace test {
 namespace {
 
+using ::testing::Return;
+using ::testing::ReturnRef;
+
 // Test class for MaliputQuery.
 class MaliputQueryTest : public ::testing::Test {
  public:
@@ -83,6 +86,17 @@ TEST_F(MaliputQueryTest, ConstructorValidation) {
 // Validates the maliput::api::RoadGeometry pointer.
 TEST_F(MaliputQueryTest, RoadGeometry) {
   ASSERT_EQ(dut_->road_geometry(), static_cast<const maliput::api::RoadGeometry*>(road_geometry_ptr_));
+}
+
+// Validates MaliputQuery redirects the query via the IdIndex.
+TEST_F(MaliputQueryTest, GetJunctionById) {
+  const maliput::api::JunctionId kJunctionId{"junction_id"};
+  const JunctionMock junction;
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetJunction(kJunctionId)).WillRepeatedly(Return(&junction));
+  EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
+
+  ASSERT_EQ(&junction, dut_->GetJunctionBy(kJunctionId));
 }
 
 }  // namespace

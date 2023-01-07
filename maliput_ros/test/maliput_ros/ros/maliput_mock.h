@@ -29,10 +29,14 @@
 #pragma once
 
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 #include <gmock/gmock.h>
+#include <maliput/api/branch_point.h>
 #include <maliput/api/intersection_book.h>
+#include <maliput/api/junction.h>
+#include <maliput/api/lane.h>
 #include <maliput/api/lane_data.h>
 #include <maliput/api/regions.h>
 #include <maliput/api/road_geometry.h>
@@ -45,6 +49,7 @@
 #include <maliput/api/rules/road_rulebook.h>
 #include <maliput/api/rules/rule_registry.h>
 #include <maliput/api/rules/traffic_light_book.h>
+#include <maliput/api/segment.h>
 
 namespace maliput_ros {
 namespace ros {
@@ -207,7 +212,7 @@ class LaneEndSetMock final : public maliput::api::LaneEndSet {
   MOCK_METHOD(const maliput::api::LaneEnd&, do_get, (int), (const));
 };
 
-/// @brief Google mock maliput::api::SegmentMock.
+/// @brief Google mock maliput::api::Segment.
 class SegmentMock final : public maliput::api::Segment {
  public:
   MOCK_METHOD(maliput::api::SegmentId, do_id, (), (const));
@@ -216,13 +221,23 @@ class SegmentMock final : public maliput::api::Segment {
   MOCK_METHOD(const maliput::api::Lane*, do_lane, (int), (const));
 };
 
-/// @brief Google mock maliput::api::JunctionMock.
+/// @brief Google mock maliput::api::Junction.
 class JunctionMock final : public maliput::api::Junction {
  public:
   MOCK_METHOD(maliput::api::JunctionId, do_id, (), (const));
   MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
   MOCK_METHOD(int, do_num_segments, (), (const));
   MOCK_METHOD(const maliput::api::Segment*, do_segment, (int), (const));
+};
+
+/// @brief Google mock maliput::api::RoadGeometry::IdIndex.
+class IdIndexMock final : public maliput::api::RoadGeometry::IdIndex {
+ public:
+  MOCK_METHOD(const maliput::api::Lane*, DoGetLane, (const maliput::api::LaneId&), (const));
+  MOCK_METHOD((const std::unordered_map<maliput::api::LaneId, const maliput::api::Lane*>&), DoGetLanes, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, DoGetSegment, (const maliput::api::SegmentId&), (const));
+  MOCK_METHOD(const maliput::api::Junction*, DoGetJunction, (const maliput::api::JunctionId&), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, DoGetBranchPoint, (const maliput::api::BranchPointId&), (const));
 };
 
 }  // namespace test
