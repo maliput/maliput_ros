@@ -13,6 +13,10 @@ message(STATUS "\n\n====== Finding 3rd Party Packages ======\n")
 
 find_package(ament_cmake REQUIRED)
 find_package(maliput REQUIRED)
+find_package(maliput_ros_interfaces REQUIRED)
+find_package(maliput_ros_translation REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 ##############################################################################
@@ -66,8 +70,30 @@ endif()
 # Export
 ##############################################################################
 
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+ament_export_include_directories(include)
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  resources
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 ament_environment_hooks(setup.sh.in)
 ament_export_dependencies(ament_cmake)
+ament_export_dependencies(maliput)
+ament_export_dependencies(maliput_ros_interfaces)
+ament_export_dependencies(maliput_ros_translation)
+ament_export_dependencies(rclcpp)
+ament_export_dependencies(rclcpp_lifecycle)
 ament_export_dependencies(yaml-cpp)
 ament_export_targets(${PROJECT_NAME}-targets HAS_LIBRARY_TARGET)
 ament_package()
