@@ -111,6 +111,9 @@ void MaliputQueryNode::TearDownMaliputQuery() {
 bool MaliputQueryNode::InitializeAllServices() {
   RCLCPP_INFO(get_logger(), "InitializeAllServices");
 
+  junction_srv_ = this->create_service<maliput_ros_interfaces::srv::Junction>(
+      kJunctionServiceName,
+      std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -120,6 +123,7 @@ bool MaliputQueryNode::InitializeAllServices() {
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
   road_geometry_srv_.reset();
+  junction_srv_.reset();
 }
 
 MaliputQueryNode::LifecyleNodeCallbackReturn MaliputQueryNode::on_activate(const rclcpp_lifecycle::State&) {
