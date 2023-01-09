@@ -182,6 +182,9 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kRoadGeometryServiceType = "maliput_ros_interfaces/srv/RoadGeometry";
   static constexpr const char* kJunctionServiceName = "/my_namespace/junction";
   static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
+  static constexpr const char* kSegmentServiceName = "/my_namespace/segment";
+  static constexpr const char* kSegmentServiceType = "maliput_ros_interfaces/srv/Segment";
+
   const std::string kYamlFilePath{TEST_YAML_CONFIGURATION_PLUGIN_INSTALL_PATH};
   const std::chrono::nanoseconds kTimeout = std::chrono::seconds(1);
   const std::chrono::nanoseconds kTimeoutServiceCall = std::chrono::seconds(1);
@@ -283,6 +286,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
 
   ASSERT_STREQ(service_names_and_types[kRoadGeometryServiceName][0].c_str(), kRoadGeometryServiceType);
   ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
+  ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -292,10 +296,9 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
   {
     ASSERT_TRUE(WaitForService(dut_, kRoadGeometryServiceName, kTimeout, kSleepPeriod));
 
-    auto road_geometry_service =
-        dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
+    auto service = dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
     auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
-    auto future_result = road_geometry_service->async_send_request(request);
+    auto future_result = service->async_send_request(request);
     const auto future_status = future_result.wait_for(kTimeoutServiceCall);
 
     ASSERT_TRUE(future_status == std::future_status::ready);
@@ -313,6 +316,18 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     ASSERT_TRUE(future_status == std::future_status::ready);
     const auto response = future_result.get();
     ASSERT_TRUE(response->junction.id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kSegmentServiceName, kTimeout, kSleepPeriod));
+
+    auto service = dut_->create_client<maliput_ros_interfaces::srv::Segment>(kSegmentServiceName);
+    auto request = std::make_shared<maliput_ros_interfaces::srv::Segment::Request>();
+    auto future_result = service->async_send_request(request);
+    const auto future_status = future_result.wait_for(kTimeoutServiceCall);
+
+    ASSERT_TRUE(future_status == std::future_status::ready);
+    const auto response = future_result.get();
+    ASSERT_TRUE(response->segment.id.id.empty());
   }
 }
 
@@ -353,10 +368,10 @@ TEST_F(RoadGeometryServiceCallTest, RoadGeometryRequestInActiveIsSuccessful) {
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), do_num_junctions()).WillRepeatedly(Return(kSizeJunctions));
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), do_num_branch_points()).WillRepeatedly(Return(kSizeBranchPoints));
 
-  auto road_geometry_service = dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
-  ASSERT_TRUE(road_geometry_service->wait_for_service(kTimeout));
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
   auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
-  auto future_result = road_geometry_service->async_send_request(request);
+  auto future_result = service->async_send_request(request);
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
@@ -404,15 +419,14 @@ TEST_F(JunctionByIdServiceCallTest, ValidResquestAndResponse) {
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), do_id()).WillRepeatedly(Return(kRoadGeometryId));
 
-  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
-  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
   auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
   request->id = maliput_ros_translation::ToRosMessage(kJunctionId);
-  auto future_result = junction_service->async_send_request(request);
+  auto future_result = service->async_send_request(request);
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
-
   ASSERT_EQ(response->junction.id.id, kJunctionId.string());
   ASSERT_EQ(response->junction.road_geometry_id.id, kRoadGeometryId.string());
   ASSERT_EQ(response->junction.segment_ids.size(), static_cast<size_t>(kSize));
@@ -427,11 +441,11 @@ TEST_F(JunctionByIdServiceCallTest, InvalidIdReturnsEmptyResponse) {
   EXPECT_CALL(id_index, DoGetJunction(kJunctionId)).WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
 
-  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
-  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
   auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
   request->id = maliput_ros_translation::ToRosMessage(kJunctionId);
-  auto future_result = junction_service->async_send_request(request);
+  auto future_result = service->async_send_request(request);
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
@@ -440,16 +454,98 @@ TEST_F(JunctionByIdServiceCallTest, InvalidIdReturnsEmptyResponse) {
 }
 
 TEST_F(JunctionByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
-  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
-  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
   auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
   request->id.id = "";
-  auto future_result = junction_service->async_send_request(request);
+
+  auto future_result = service->async_send_request(request);
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
 
   ASSERT_TRUE(response->junction.id.id.empty());
+}
+
+// Test class to wrap the tests of /segment service call.
+class SegmentByIdServiceCallTest : public MaliputQueryNodeAfterConfigurationTest {
+ public:
+  void SetUp() override {
+    MaliputQueryNodeAfterConfigurationTest::SetUp();
+    AddNodeToExecutorAndSpin(dut_);
+    TransitionToConfigureFromUnconfigured();
+    TransitionToActiveFromConfigured();
+  }
+};
+
+TEST_F(SegmentByIdServiceCallTest, ValidResquestAndResponse) {
+  static constexpr int kSize{2};
+  const maliput::api::LaneId kLaneIdA{"lane_id_a"};
+  const maliput::api::LaneId kLaneIdB{"lane_id_b"};
+  const maliput::api::JunctionId kJunctionId{"junction_id"};
+  const maliput::api::SegmentId kSegmentId{"segment_id"};
+  LaneMock lane_a;
+  EXPECT_CALL(lane_a, do_id()).WillRepeatedly(Return(kLaneIdA));
+  LaneMock lane_b;
+  EXPECT_CALL(lane_b, do_id()).WillRepeatedly(Return(kLaneIdB));
+  JunctionMock junction;
+  EXPECT_CALL(junction, do_id()).WillRepeatedly(Return(kJunctionId));
+  SegmentMock segment;
+  EXPECT_CALL(segment, do_id()).WillRepeatedly(Return(kSegmentId));
+  EXPECT_CALL(segment, do_junction()).WillRepeatedly(Return(&junction));
+  EXPECT_CALL(segment, do_num_lanes()).WillRepeatedly(Return(kSize));
+  EXPECT_CALL(segment, do_lane(0)).WillRepeatedly(Return(&lane_a));
+  EXPECT_CALL(segment, do_lane(1)).WillRepeatedly(Return(&lane_b));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetSegment(kSegmentId)).WillRepeatedly(Return(&segment));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Segment::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kSegmentId);
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Segment>(kSegmentServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_EQ(response->segment.id.id, kSegmentId.string());
+  ASSERT_EQ(response->segment.junction_id.id, kJunctionId.string());
+  ASSERT_EQ(response->segment.lane_ids.size(), static_cast<size_t>(kSize));
+  ASSERT_EQ(response->segment.lane_ids[0].id, kLaneIdA.string());
+  ASSERT_EQ(response->segment.lane_ids[1].id, kLaneIdB.string());
+}
+
+TEST_F(SegmentByIdServiceCallTest, InvalidIdReturnsEmptyResponse) {
+  const maliput::api::SegmentId kSegmentId{"invalid_id"};
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetSegment(kSegmentId)).WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Segment::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kSegmentId);
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Segment>(kSegmentServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_TRUE(response->segment.id.id.empty());
+}
+
+TEST_F(SegmentByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Segment::Request>();
+  request->id.id = "";
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Segment>(kSegmentServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_TRUE(response->segment.id.id.empty());
 }
 
 }  // namespace

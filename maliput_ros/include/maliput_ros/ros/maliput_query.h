@@ -35,6 +35,7 @@
 #include <maliput/api/junction.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
+#include <maliput/api/segment.h>
 #include <maliput/common/maliput_throw.h>
 
 namespace maliput_ros {
@@ -59,6 +60,13 @@ class MaliputQuery final {
   /// @return A maliput::api::Junction when @p id refers to a valid maliput::api::Junction. Otherwise, nullptr..
   inline const maliput::api::Junction* GetJunctionBy(const maliput::api::JunctionId& id) const {
     return road_network_->road_geometry()->ById().GetJunction(id);
+  }
+
+  /// Finds a maliput::api::Segment by its ID.
+  /// @param[in] id The maliput::api::SegmentId.
+  /// @return A maliput::api::Segment when @p id refers to a valid maliput::api::Segment. Otherwise, nullptr..
+  inline const maliput::api::Segment* GetSegmentBy(const maliput::api::SegmentId& id) const {
+    return road_network_->road_geometry()->ById().GetSegment(id);
   }
 
  private:

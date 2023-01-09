@@ -96,7 +96,18 @@ TEST_F(MaliputQueryTest, GetJunctionById) {
   EXPECT_CALL(id_index, DoGetJunction(kJunctionId)).WillRepeatedly(Return(&junction));
   EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
 
-  ASSERT_EQ(&junction, dut_->GetJunctionBy(kJunctionId));
+  ASSERT_EQ(dut_->GetJunctionBy(kJunctionId), &junction);
+}
+
+// Validates MaliputQuery redirects the query via the IdIndex.
+TEST_F(MaliputQueryTest, GetSegmentById) {
+  const maliput::api::SegmentId kSegmentId{"segment_id"};
+  const SegmentMock segment;
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetSegment(kSegmentId)).WillRepeatedly(Return(&segment));
+  EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
+
+  ASSERT_EQ(dut_->GetSegmentBy(kSegmentId), &segment);
 }
 
 }  // namespace
