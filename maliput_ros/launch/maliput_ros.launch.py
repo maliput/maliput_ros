@@ -42,13 +42,13 @@ def generate_launch_description():
         default_value='',
         description='Path to the YAML file containing the maliput plugin configuration.')
     
-    # The query server node.
+    # The maliput_query_server node.
     maliput_query_server_node = launch_ros.actions.LifecycleNode(
         package='maliput_ros', executable='maliput_ros', name='maliput_query_server',
         namespace='maliput_ros', output='screen',
         parameters=[{"yaml_configuration_path": maliput_yaml_path}])
     
-    # When the query_server reaches the 'inactive' state, make it take the 'activate' transition.
+    # When the maliput_query_server reaches the 'inactive' state, make it take the 'activate' transition.
     register_event_handler_for_maliput_query_server_reaches_inactive_state = launch.actions.RegisterEventHandler(
         launch_ros.event_handlers.OnStateTransition(
             target_lifecycle_node=maliput_query_server_node, goal_state='inactive',

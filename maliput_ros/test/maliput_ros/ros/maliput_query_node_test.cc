@@ -182,7 +182,6 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kRoadGeometryServiceType = "maliput_ros_interfaces/srv/RoadGeometry";
   static constexpr const char* kJunctionServiceName = "/my_namespace/junction";
   static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
-
   const std::string kYamlFilePath{TEST_YAML_CONFIGURATION_PLUGIN_INSTALL_PATH};
   const std::chrono::nanoseconds kTimeout = std::chrono::seconds(1);
   const std::chrono::nanoseconds kTimeoutServiceCall = std::chrono::seconds(1);
@@ -290,7 +289,6 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
 TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsToFailure) {
   AddNodeToExecutorAndSpin(dut_);
   TransitionToConfigureFromUnconfigured();
-
   {
     ASSERT_TRUE(WaitForService(dut_, kRoadGeometryServiceName, kTimeout, kSleepPeriod));
 
