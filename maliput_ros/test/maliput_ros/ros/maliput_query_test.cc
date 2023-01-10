@@ -110,6 +110,17 @@ TEST_F(MaliputQueryTest, GetSegmentById) {
   ASSERT_EQ(dut_->GetSegmentBy(kSegmentId), &segment);
 }
 
+// Validates MaliputQuery redirects the query via the IdIndex.
+TEST_F(MaliputQueryTest, GetLaneById) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const LaneMock lane;
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(&lane));
+  EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
+
+  ASSERT_EQ(dut_->GetLaneBy(kLaneId), &lane);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros

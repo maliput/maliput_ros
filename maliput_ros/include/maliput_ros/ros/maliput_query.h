@@ -33,6 +33,7 @@
 #include <utility>
 
 #include <maliput/api/junction.h>
+#include <maliput/api/lane.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
 #include <maliput/api/segment.h>
@@ -67,6 +68,13 @@ class MaliputQuery final {
   /// @return A maliput::api::Segment when @p id refers to a valid maliput::api::Segment. Otherwise, nullptr..
   inline const maliput::api::Segment* GetSegmentBy(const maliput::api::SegmentId& id) const {
     return road_network_->road_geometry()->ById().GetSegment(id);
+  }
+
+  /// Finds a maliput::api::Lane by its ID.
+  /// @param[in] id The maliput::api::LaneId.
+  /// @return A maliput::api::Lane when @p id refers to a valid maliput::api::Lane. Otherwise, nullptr..
+  inline const maliput::api::Lane* GetLaneBy(const maliput::api::LaneId& id) const {
+    return road_network_->road_geometry()->ById().GetLane(id);
   }
 
  private:

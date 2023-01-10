@@ -84,6 +84,21 @@ void MaliputQueryNode::JunctionCallback(
       maliput_query_->GetJunctionBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::LaneCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Lane::Request> request,
+                                    std::shared_ptr<maliput_ros_interfaces::srv::Lane::Response> response) const {
+  RCLCPP_INFO(get_logger(), "LaneCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  if (request->id.id.empty()) {
+    RCLCPP_ERROR(get_logger(), "Request /lane with invalid value for LaneId.");
+    return;
+  }
+  response->lane = maliput_ros_translation::ToRosMessage(
+      maliput_query_->GetLaneBy(maliput_ros_translation::FromRosMessage(request->id)));
+}
+
 void MaliputQueryNode::SegmentCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Segment::Request> request,
                                        std::shared_ptr<maliput_ros_interfaces::srv::Segment::Response> response) const {
   RCLCPP_INFO(get_logger(), "SegmentCallback");
@@ -130,6 +145,8 @@ bool MaliputQueryNode::InitializeAllServices() {
   junction_srv_ = this->create_service<maliput_ros_interfaces::srv::Junction>(
       kJunctionServiceName,
       std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  lane_srv_ = this->create_service<maliput_ros_interfaces::srv::Lane>(
+      kLaneServiceName, std::bind(&MaliputQueryNode::LaneCallback, this, std::placeholders::_1, std::placeholders::_2));
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -142,6 +159,7 @@ bool MaliputQueryNode::InitializeAllServices() {
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
   junction_srv_.reset();
+  lane_srv_.reset();
   road_geometry_srv_.reset();
   segment_srv_.reset();
 }
