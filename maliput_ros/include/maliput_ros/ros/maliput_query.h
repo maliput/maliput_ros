@@ -32,6 +32,7 @@
 #include <memory>
 #include <utility>
 
+#include <maliput/api/branch_point.h>
 #include <maliput/api/junction.h>
 #include <maliput/api/lane.h>
 #include <maliput/api/road_geometry.h>
@@ -75,6 +76,13 @@ class MaliputQuery final {
   /// @return A maliput::api::Lane when @p id refers to a valid maliput::api::Lane. Otherwise, nullptr..
   inline const maliput::api::Lane* GetLaneBy(const maliput::api::LaneId& id) const {
     return road_network_->road_geometry()->ById().GetLane(id);
+  }
+
+  /// Finds a maliput::api::BranchPoint by its ID.
+  /// @param[in] id The maliput::api::BranchPointId.
+  /// @return A maliput::api::BranchPoint when @p id refers to a valid maliput::api::BranchPoint. Otherwise, nullptr..
+  inline const maliput::api::BranchPoint* GetBranchPointBy(const maliput::api::BranchPointId& id) const {
+    return road_network_->road_geometry()->ById().GetBranchPoint(id);
   }
 
  private:

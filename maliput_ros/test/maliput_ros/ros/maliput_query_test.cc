@@ -121,6 +121,17 @@ TEST_F(MaliputQueryTest, GetLaneById) {
   ASSERT_EQ(dut_->GetLaneBy(kLaneId), &lane);
 }
 
+// Validates MaliputQuery redirects the query via the IdIndex.
+TEST_F(MaliputQueryTest, GetBranchPointById) {
+  const maliput::api::BranchPointId kBranchPointId{"branch_point_id"};
+  const BranchPointMock branch_point;
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetBranchPoint(kBranchPointId)).WillRepeatedly(Return(&branch_point));
+  EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
+
+  ASSERT_EQ(dut_->GetBranchPointBy(kBranchPointId), &branch_point);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros

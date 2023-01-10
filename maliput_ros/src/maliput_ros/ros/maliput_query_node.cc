@@ -68,6 +68,22 @@ void MaliputQueryNode::RoadGeometryCallback(
   response->road_geometry = maliput_ros_translation::ToRosMessage(maliput_query_->road_geometry());
 }
 
+void MaliputQueryNode::BranchPointCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Response> response) const {
+  RCLCPP_INFO(get_logger(), "BranchPointCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  if (request->id.id.empty()) {
+    RCLCPP_ERROR(get_logger(), "Request /branch_point with invalid value for BranchPointId.");
+    return;
+  }
+  response->branch_point = maliput_ros_translation::ToRosMessage(
+      maliput_query_->GetBranchPointBy(maliput_ros_translation::FromRosMessage(request->id)));
+}
+
 void MaliputQueryNode::JunctionCallback(
     const std::shared_ptr<maliput_ros_interfaces::srv::Junction::Request> request,
     std::shared_ptr<maliput_ros_interfaces::srv::Junction::Response> response) const {
@@ -142,6 +158,9 @@ void MaliputQueryNode::TearDownMaliputQuery() {
 bool MaliputQueryNode::InitializeAllServices() {
   RCLCPP_INFO(get_logger(), "InitializeAllServices");
 
+  branch_point_srv_ = this->create_service<maliput_ros_interfaces::srv::BranchPoint>(
+      kBranchPointServiceName,
+      std::bind(&MaliputQueryNode::BranchPointCallback, this, std::placeholders::_1, std::placeholders::_2));
   junction_srv_ = this->create_service<maliput_ros_interfaces::srv::Junction>(
       kJunctionServiceName,
       std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -158,6 +177,7 @@ bool MaliputQueryNode::InitializeAllServices() {
 
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
+  branch_point_srv_.reset();
   junction_srv_.reset();
   lane_srv_.reset();
   road_geometry_srv_.reset();
