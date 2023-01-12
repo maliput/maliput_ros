@@ -35,6 +35,7 @@
 #include <gtest/gtest.h>
 #include <maliput/api/road_network.h>
 #include <maliput/common/assertion_error.h>
+#include <maliput/test_utilities/maliput_types_compare.h>
 
 #include "maliput_ros/ros/maliput_mock.h"
 
@@ -130,6 +131,41 @@ TEST_F(MaliputQueryTest, GetBranchPointById) {
   EXPECT_CALL(*road_geometry_ptr_, DoById()).WillRepeatedly(ReturnRef(id_index));
 
   ASSERT_EQ(dut_->GetBranchPointBy(kBranchPointId), &branch_point);
+}
+
+// Validates MaliputQuery redirects ther query through the RoadGeometry.
+TEST_F(MaliputQueryTest, ToRoadPosition) {
+  const LaneMock lane;
+  const maliput::api::LanePosition kLanePosition{1., 2., 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  const maliput::api::InertialPosition kInertialPosition{4., 5., 6.};
+  constexpr const double kDistance{7.};
+  const maliput::api::RoadPositionResult kRoadPositionResult{kRoadPosition, kInertialPosition, kDistance};
+  EXPECT_CALL(*road_geometry_ptr_, DoToRoadPosition(kInertialPosition, ::testing::_))
+      .WillRepeatedly(Return(kRoadPositionResult));
+
+  const maliput::api::RoadPositionResult result = dut_->ToRoadPosition(kInertialPosition);
+
+  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result, kRoadPositionResult, 0. /* tolerance */));
+}
+
+// Validates MaliputQuery redirects ther query through the RoadGeometry.
+TEST_F(MaliputQueryTest, FindRoadPositions) {
+  const LaneMock lane;
+  const maliput::api::InertialPosition kInertialPosition{4., 5., 6.};
+  constexpr const double kRadius{8.};
+  const maliput::api::LanePosition kLanePosition{1., 2., 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  constexpr const double kDistance{7.};
+  const maliput::api::RoadPositionResult kRoadPositionResult{kRoadPosition, kInertialPosition, kDistance};
+  const std::vector<maliput::api::RoadPositionResult> kRoadPositionResults{kRoadPositionResult};
+  EXPECT_CALL(*road_geometry_ptr_, DoFindRoadPositions(kInertialPosition, kRadius))
+      .WillRepeatedly(Return(kRoadPositionResults));
+
+  const std::vector<maliput::api::RoadPositionResult> result = dut_->FindRoadPositions(kInertialPosition, kRadius);
+
+  ASSERT_EQ(result.size(), 1u);
+  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result[0], kRoadPositionResult, 0. /* tolerance */));
 }
 
 }  // namespace

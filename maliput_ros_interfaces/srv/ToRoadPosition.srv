@@ -1,0 +1,4 @@
+# Equivalent to make maliput::api::RoadNetwork::road_geometry()->ToRoadPosition(inertial_position, {}).
+InertialPosition inertial_position
+---
+RoadPositionResult road_position_result

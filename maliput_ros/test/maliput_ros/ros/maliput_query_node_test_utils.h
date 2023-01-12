@@ -131,6 +131,10 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kLaneServiceType = "maliput_ros_interfaces/srv/Lane";
   static constexpr const char* kSegmentServiceName = "/my_namespace/segment";
   static constexpr const char* kSegmentServiceType = "maliput_ros_interfaces/srv/Segment";
+  static constexpr const char* kToRoadPositionServiceName = "/my_namespace/to_road_position";
+  static constexpr const char* kToRoadPositionServiceType = "maliput_ros_interfaces/srv/ToRoadPosition";
+  static constexpr const char* kFindRoadPositionsServiceName = "/my_namespace/find_road_positions";
+  static constexpr const char* kFindRoadPositionsServiceType = "maliput_ros_interfaces/srv/FindRoadPositions";
 
   const std::string kYamlFilePath{TEST_YAML_CONFIGURATION_PLUGIN_INSTALL_PATH};
   const std::chrono::nanoseconds kTimeout = std::chrono::seconds(1);
