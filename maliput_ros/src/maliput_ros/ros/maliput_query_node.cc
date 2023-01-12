@@ -34,6 +34,7 @@
 
 #include <maliput/api/junction.h>
 #include <maliput/api/road_network.h>
+#include <maliput/api/segment.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/plugin/create_road_network.h>
 #include <maliput_ros_translation/convert.h>
@@ -83,6 +84,21 @@ void MaliputQueryNode::JunctionCallback(
       maliput_query_->GetJunctionBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::SegmentCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Segment::Request> request,
+                                       std::shared_ptr<maliput_ros_interfaces::srv::Segment::Response> response) const {
+  RCLCPP_INFO(get_logger(), "SegmentCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  if (request->id.id.empty()) {
+    RCLCPP_ERROR(get_logger(), "Request /segment with invalid value for SegmentId.");
+    return;
+  }
+  response->segment = maliput_ros_translation::ToRosMessage(
+      maliput_query_->GetSegmentBy(maliput_ros_translation::FromRosMessage(request->id)));
+}
+
 std::string MaliputQueryNode::GetMaliputYamlFilePath() const {
   return this->get_parameter(kYamlConfigurationPath).get_parameter_value().get<std::string>();
 }
@@ -117,13 +133,17 @@ bool MaliputQueryNode::InitializeAllServices() {
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
+  segment_srv_ = this->create_service<maliput_ros_interfaces::srv::Segment>(
+      kSegmentServiceName,
+      std::bind(&MaliputQueryNode::SegmentCallback, this, std::placeholders::_1, std::placeholders::_2));
   return true;
 }
 
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
-  road_geometry_srv_.reset();
   junction_srv_.reset();
+  road_geometry_srv_.reset();
+  segment_srv_.reset();
 }
 
 MaliputQueryNode::LifecyleNodeCallbackReturn MaliputQueryNode::on_activate(const rclcpp_lifecycle::State&) {

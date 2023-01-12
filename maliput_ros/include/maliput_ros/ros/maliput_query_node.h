@@ -36,6 +36,7 @@
 
 #include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
+#include <maliput_ros_interfaces/srv/segment.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 
@@ -70,6 +71,7 @@ namespace ros {
 /// This query server offers:
 /// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
+/// - /segment: looks for a maliput::api::Segment by its ID.
 class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  public:
   using LifecyleNodeCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -85,6 +87,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  private:
   static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
+  static constexpr const char* kSegmentServiceName = "segment";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
   static constexpr const char* kYamlConfigurationPathDescription =
       "File path to the yaml file containing the maliput plugin RoadNework loader.";
@@ -105,6 +108,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::RoadGeometry description.
   void RoadGeometryCallback(const std::shared_ptr<maliput_ros_interfaces::srv::RoadGeometry::Request> request,
                             std::shared_ptr<maliput_ros_interfaces::srv::RoadGeometry::Response> response) const;
+
+  // @brief Responds the maliput::api::Segment configuration.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::SegmentId to query.
+  // @param[out] response Loads the maliput::api::Segment description.
+  void SegmentCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Segment::Request> request,
+                       std::shared_ptr<maliput_ros_interfaces::srv::Segment::Response> response) const;
 
   // @brief Loads the maliput::api::RoadNetwork from the yaml_configuration_path contents.
   // @return true When the load procedure is successful.
@@ -156,6 +166,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
+  // /segment service.
+  rclcpp::Service<maliput_ros_interfaces::srv::Segment>::SharedPtr segment_srv_;
   // Proxy to a maliput::api::RoadNetwork queries.
   std::unique_ptr<maliput_ros::ros::MaliputQuery> maliput_query_;
 };
