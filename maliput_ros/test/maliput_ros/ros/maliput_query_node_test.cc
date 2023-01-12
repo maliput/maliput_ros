@@ -43,6 +43,7 @@
 #include <lifecycle_msgs/msg/state.hpp>
 #include <lifecycle_msgs/msg/transition.hpp>
 #include <maliput/common/filesystem.h>
+#include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <rcl_lifecycle/rcl_lifecycle.h>
 #include <rclcpp/rclcpp.hpp>
@@ -50,6 +51,7 @@
 
 #include "maliput_ros/ros/maliput_mock.h"
 #include "maliput_ros/ros/maliput_plugin_config_test.h"
+#include "maliput_ros_translation/convert.h"
 
 namespace maliput_ros {
 namespace ros {
@@ -57,6 +59,7 @@ namespace test {
 namespace {
 
 using ::testing::Return;
+using ::testing::ReturnRef;
 
 // @return A maliput::api::RoadNetwork populated with gmock versions of it, except maliput::api::rules::RuleRegistry.
 std::unique_ptr<maliput::api::RoadNetwork> MakeRoadNetworkMock() {
@@ -177,6 +180,8 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kRoadNetowrkMockPluginPath = TEST_MALIPUT_PLUGIN_LIBDIR;
   static constexpr const char* kRoadGeometryServiceName = "/my_namespace/road_geometry";
   static constexpr const char* kRoadGeometryServiceType = "maliput_ros_interfaces/srv/RoadGeometry";
+  static constexpr const char* kJunctionServiceName = "/my_namespace/junction";
+  static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
   const std::string kYamlFilePath{TEST_YAML_CONFIGURATION_PLUGIN_INSTALL_PATH};
   const std::chrono::nanoseconds kTimeout = std::chrono::seconds(1);
   const std::chrono::nanoseconds kTimeoutServiceCall = std::chrono::seconds(1);
@@ -277,22 +282,38 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   auto service_names_and_types = dut_->get_service_names_and_types();
 
   ASSERT_STREQ(service_names_and_types[kRoadGeometryServiceName][0].c_str(), kRoadGeometryServiceType);
+  ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
 TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsToFailure) {
   AddNodeToExecutorAndSpin(dut_);
   TransitionToConfigureFromUnconfigured();
-  ASSERT_TRUE(WaitForService(dut_, kRoadGeometryServiceName, kTimeout, kSleepPeriod));
+  {
+    ASSERT_TRUE(WaitForService(dut_, kRoadGeometryServiceName, kTimeout, kSleepPeriod));
 
-  auto road_geometry_service = dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
-  auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
-  auto future_result = road_geometry_service->async_send_request(request);
-  const auto future_status = future_result.wait_for(kTimeoutServiceCall);
+    auto road_geometry_service =
+        dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
+    auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
+    auto future_result = road_geometry_service->async_send_request(request);
+    const auto future_status = future_result.wait_for(kTimeoutServiceCall);
 
-  ASSERT_TRUE(future_status == std::future_status::ready);
-  const auto response = future_result.get();
-  ASSERT_TRUE(response->road_geometry.id.id.empty());
+    ASSERT_TRUE(future_status == std::future_status::ready);
+    const auto response = future_result.get();
+    ASSERT_TRUE(response->road_geometry.id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kJunctionServiceName, kTimeout, kSleepPeriod));
+
+    auto service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+    auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
+    auto future_result = service->async_send_request(request);
+    const auto future_status = future_result.wait_for(kTimeoutServiceCall);
+
+    ASSERT_TRUE(future_status == std::future_status::ready);
+    const auto response = future_result.get();
+    ASSERT_TRUE(response->junction.id.id.empty());
+  }
 }
 
 // Makes sure the node can transtion to the ACTIVE state.
@@ -302,7 +323,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, TransitionToActiveIsSuccessful) {
 }
 
 // Test class used to hold the configuration of the RoadGeometryMock and validate the result of the service call.
-class TestRoadGeometryServiceCall : public MaliputQueryNodeAfterConfigurationTest {
+class RoadGeometryServiceCallTest : public MaliputQueryNodeAfterConfigurationTest {
  public:
   static constexpr int kSizeJunctions{0};
   static constexpr int kSizeBranchPoints{0};
@@ -320,7 +341,7 @@ class TestRoadGeometryServiceCall : public MaliputQueryNodeAfterConfigurationTes
   }
 };
 
-TEST_F(TestRoadGeometryServiceCall, RoadGeometryRequestInActiveIsSuccessful) {
+TEST_F(RoadGeometryServiceCallTest, RoadGeometryRequestInActiveIsSuccessful) {
   // Note: there is no point in populating Junctions and BranchPoints, it is already covered
   // in maliput_ros_translation package.
   EXPECT_CALL(*(road_network_ptrs_.road_geometry), do_id()).WillRepeatedly(Return(kRoadGeometryId));
@@ -349,6 +370,86 @@ TEST_F(TestRoadGeometryServiceCall, RoadGeometryRequestInActiveIsSuccessful) {
   ASSERT_EQ(response->road_geometry.inertial_to_backend_frame_translation.z, kInertialToBackendFrameTranslation.z());
   ASSERT_EQ(response->road_geometry.junction_ids.size(), static_cast<size_t>(kSizeJunctions));
   ASSERT_EQ(response->road_geometry.branch_point_ids.size(), static_cast<size_t>(kSizeJunctions));
+}
+
+// Test class to wrap the tests of /junction service call.
+class JunctionByIdServiceCallTest : public MaliputQueryNodeAfterConfigurationTest {
+ public:
+  void SetUp() override {
+    MaliputQueryNodeAfterConfigurationTest::SetUp();
+    AddNodeToExecutorAndSpin(dut_);
+    TransitionToConfigureFromUnconfigured();
+    TransitionToActiveFromConfigured();
+  }
+};
+
+TEST_F(JunctionByIdServiceCallTest, ValidResquestAndResponse) {
+  static constexpr int kSize{2};
+  const maliput::api::SegmentId kSgmentIdA{"segment_id_a"};
+  const maliput::api::SegmentId kSgmentIdB{"segment_id_b"};
+  const maliput::api::RoadGeometryId kRoadGeometryId{"road_geometry_id"};
+  const maliput::api::JunctionId kJunctionId{"junction_id"};
+  SegmentMock segment_a;
+  EXPECT_CALL(segment_a, do_id()).WillRepeatedly(Return(kSgmentIdA));
+  SegmentMock segment_b;
+  EXPECT_CALL(segment_b, do_id()).WillRepeatedly(Return(kSgmentIdB));
+  JunctionMock junction;
+  EXPECT_CALL(junction, do_id()).WillRepeatedly(Return(kJunctionId));
+  EXPECT_CALL(junction, do_road_geometry()).WillRepeatedly(Return(road_network_ptrs_.road_geometry));
+  EXPECT_CALL(junction, do_num_segments()).WillRepeatedly(Return(kSize));
+  EXPECT_CALL(junction, do_segment(0)).WillRepeatedly(Return(&segment_a));
+  EXPECT_CALL(junction, do_segment(1)).WillRepeatedly(Return(&segment_b));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetJunction(kJunctionId)).WillRepeatedly(Return(&junction));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), do_id()).WillRepeatedly(Return(kRoadGeometryId));
+
+  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kJunctionId);
+  auto future_result = junction_service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  const auto response = future_result.get();
+
+  ASSERT_EQ(response->junction.id.id, kJunctionId.string());
+  ASSERT_EQ(response->junction.road_geometry_id.id, kRoadGeometryId.string());
+  ASSERT_EQ(response->junction.segment_ids.size(), static_cast<size_t>(kSize));
+  ASSERT_EQ(response->junction.segment_ids[0].id, kSgmentIdA.string());
+  ASSERT_EQ(response->junction.segment_ids[1].id, kSgmentIdB.string());
+}
+
+TEST_F(JunctionByIdServiceCallTest, InvalidIdReturnsEmptyResponse) {
+  const maliput::api::RoadGeometryId kRoadGeometryId{"road_geometry_id"};
+  const maliput::api::JunctionId kJunctionId{"invalid_id"};
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetJunction(kJunctionId)).WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+
+  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kJunctionId);
+  auto future_result = junction_service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  const auto response = future_result.get();
+
+  ASSERT_TRUE(response->junction.id.id.empty());
+}
+
+TEST_F(JunctionByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
+  auto junction_service = dut_->create_client<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName);
+  ASSERT_TRUE(junction_service->wait_for_service(kTimeout));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
+  request->id.id = "";
+  auto future_result = junction_service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  const auto response = future_result.get();
+
+  ASSERT_TRUE(response->junction.id.id.empty());
 }
 
 }  // namespace

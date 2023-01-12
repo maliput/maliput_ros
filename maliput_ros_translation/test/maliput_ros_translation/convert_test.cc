@@ -45,64 +45,86 @@ namespace {
 using ::testing::Return;
 using ::testing::ReturnRef;
 
-class RoadGeometryMock final : public maliput::api::test::MockRoadGeometry {
+/// @brief Google mock maliput::api::RoadGeometry.
+class RoadGeometryMock final : public maliput::api::RoadGeometry {
  public:
-  explicit RoadGeometryMock(const maliput::api::RoadGeometryId& id) : maliput::api::test::MockRoadGeometry(id) {}
-  MOCK_CONST_METHOD0(do_id, maliput::api::RoadGeometryId());
-  MOCK_CONST_METHOD0(do_num_junctions, int());
-  MOCK_CONST_METHOD1(do_junction, const maliput::api::Junction*(int));
-  MOCK_CONST_METHOD0(do_num_branch_points, int());
-  MOCK_CONST_METHOD1(do_branch_point, const maliput::api::BranchPoint*(int));
-  MOCK_CONST_METHOD0(do_linear_tolerance, double());
-  MOCK_CONST_METHOD0(do_angular_tolerance, double());
-  MOCK_CONST_METHOD0(do_scale_length, double());
-  MOCK_CONST_METHOD0(do_inertial_to_backend_frame_translation, maliput::math::Vector3());
+  MOCK_METHOD(maliput::api::RoadGeometryId, do_id, (), (const));
+  MOCK_METHOD(int, do_num_junctions, (), (const));
+  MOCK_METHOD(const maliput::api::Junction*, do_junction, (int), (const));
+  MOCK_METHOD(int, do_num_branch_points, (), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, do_branch_point, (int), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry::IdIndex&, DoById, (), (const));
+  MOCK_METHOD(maliput::api::RoadPositionResult, DoToRoadPosition,
+              (const maliput::api::InertialPosition&, const std::optional<maliput::api::RoadPosition>&), (const));
+  MOCK_METHOD(std::vector<maliput::api::RoadPositionResult>, DoFindRoadPositions,
+              (const maliput::api::InertialPosition&, double), (const));
+  MOCK_METHOD(double, do_linear_tolerance, (), (const));
+  MOCK_METHOD(double, do_angular_tolerance, (), (const));
+  MOCK_METHOD(double, do_scale_length, (), (const));
+  MOCK_METHOD(std::vector<maliput::api::InertialPosition>, DoSampleAheadWaypoints,
+              (const maliput::api::LaneSRoute&, double), (const));
+  MOCK_METHOD(maliput::math::Vector3, do_inertial_to_backend_frame_translation, (), (const));
 };
 
+/// @brief Google mock maliput::api::BranchPoint.
 class BranchPointMock final : public maliput::api::BranchPoint {
  public:
-  MOCK_CONST_METHOD0(do_id, maliput::api::BranchPointId());
-  MOCK_CONST_METHOD0(do_road_geometry, const maliput::api::RoadGeometry*());
-  MOCK_CONST_METHOD1(DoGetConfluentBranches, const maliput::api::LaneEndSet*(const maliput::api::LaneEnd& end));
-  MOCK_CONST_METHOD1(DoGetOngoingBranches, const maliput::api::LaneEndSet*(const maliput::api::LaneEnd& end));
-  MOCK_CONST_METHOD1(DoGetDefaultBranch, std::optional<maliput::api::LaneEnd>(const maliput::api::LaneEnd& end));
-  MOCK_CONST_METHOD0(DoGetASide, const maliput::api::LaneEndSet*());
-  MOCK_CONST_METHOD0(DoGetBSide, const maliput::api::LaneEndSet*());
+  MOCK_METHOD(maliput::api::BranchPointId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetConfluentBranches, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetOngoingBranches, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(std::optional<maliput::api::LaneEnd>, DoGetDefaultBranch, (const maliput::api::LaneEnd& end), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetASide, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetBSide, (), (const));
 };
 
-class LaneMock final : public maliput::geometry_base::test::MockLane {
+/// @brief Google mock maliput::api::Lane.
+class LaneMock final : public maliput::api::Lane {
  public:
-  explicit LaneMock(const maliput::api::LaneId& id) : MockLane(id) {}
-  MOCK_CONST_METHOD0(do_id, maliput::api::LaneId());
-  MOCK_CONST_METHOD0(do_index, int());
-  MOCK_CONST_METHOD0(do_segment, const maliput::api::Segment*());
-  MOCK_CONST_METHOD0(do_to_left, const maliput::api::Lane*());
-  MOCK_CONST_METHOD0(do_to_right, const maliput::api::Lane*());
-  MOCK_CONST_METHOD0(do_length, double());
-  MOCK_CONST_METHOD1(DoGetBranchPoint, const maliput::api::BranchPoint*(const maliput::api::LaneEnd::Which));
-  MOCK_CONST_METHOD1(DoGetDefaultBranch, std::optional<maliput::api::LaneEnd>(const maliput::api::LaneEnd::Which));
+  MOCK_METHOD(maliput::api::LaneId, do_id, (), (const));
+  MOCK_METHOD(int, do_index, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, do_segment, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_to_left, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_to_right, (), (const));
+  MOCK_METHOD(double, do_length, (), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, DoGetBranchPoint, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(std::optional<maliput::api::LaneEnd>, DoGetDefaultBranch, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(maliput::api::RBounds, do_lane_bounds, (double), (const));
+  MOCK_METHOD(maliput::api::RBounds, do_segment_bounds, (double), (const));
+  MOCK_METHOD(maliput::api::HBounds, do_elevation_bounds, (double, double), (const));
+  MOCK_METHOD(maliput::api::InertialPosition, DoToInertialPosition, (const maliput::api::LanePosition&), (const));
+  MOCK_METHOD(maliput::api::Rotation, DoGetOrientation, (const maliput::api::LanePosition&), (const));
+  MOCK_METHOD(maliput::api::LanePosition, DoEvalMotionDerivatives,
+              (const maliput::api::LanePosition&, const maliput::api::IsoLaneVelocity&), (const));
+  MOCK_METHOD(maliput::api::LanePositionResult, DoToLanePosition, (const maliput::api::InertialPosition&), (const));
+  MOCK_METHOD(maliput::api::LanePositionResult, DoToSegmentPosition, (const maliput::api::InertialPosition&), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetConfluentBranches, (const maliput::api::LaneEnd::Which), (const));
+  MOCK_METHOD(const maliput::api::LaneEndSet*, DoGetOngoingBranches, (const maliput::api::LaneEnd::Which), (const));
 };
 
+/// @brief Google mock maliput::api::LaneEndSet.
 class LaneEndSetMock final : public maliput::api::LaneEndSet {
  public:
-  MOCK_CONST_METHOD0(do_size, int());
-  MOCK_CONST_METHOD1(do_get, const maliput::api::LaneEnd&(int));
+  MOCK_METHOD(int, do_size, (), (const));
+  MOCK_METHOD(const maliput::api::LaneEnd&, do_get, (int), (const));
 };
 
+/// @brief Google mock maliput::api::SegmentMock.
 class SegmentMock final : public maliput::api::Segment {
  public:
-  MOCK_CONST_METHOD0(do_id, maliput::api::SegmentId());
-  MOCK_CONST_METHOD0(do_junction, const maliput::api::Junction*());
-  MOCK_CONST_METHOD0(do_num_lanes, int());
-  MOCK_CONST_METHOD1(do_lane, const maliput::api::Lane*(int));
+  MOCK_METHOD(maliput::api::SegmentId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::Junction*, do_junction, (), (const));
+  MOCK_METHOD(int, do_num_lanes, (), (const));
+  MOCK_METHOD(const maliput::api::Lane*, do_lane, (int), (const));
 };
 
+/// @brief Google mock maliput::api::JunctionMock.
 class JunctionMock final : public maliput::api::Junction {
  public:
-  MOCK_CONST_METHOD0(do_id, maliput::api::JunctionId());
-  MOCK_CONST_METHOD0(do_road_geometry, const maliput::api::RoadGeometry*());
-  MOCK_CONST_METHOD0(do_num_segments, int());
-  MOCK_CONST_METHOD1(do_segment, const maliput::api::Segment*(int));
+  MOCK_METHOD(maliput::api::JunctionId, do_id, (), (const));
+  MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
+  MOCK_METHOD(int, do_num_segments, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, do_segment, (int), (const));
 };
 
 class IdsToRosMessageTest : public ::testing::Test {
@@ -146,7 +168,7 @@ class LaneEndToRosMessageTest : public ::testing::Test {
 };
 
 TEST_F(LaneEndToRosMessageTest, LaneEndAtStart) {
-  LaneMock lane(kLaneId);
+  LaneMock lane;
   EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
   const maliput::api::LaneEnd lane_end(&lane, maliput::api::LaneEnd::Which::kStart);
 
@@ -157,7 +179,7 @@ TEST_F(LaneEndToRosMessageTest, LaneEndAtStart) {
 }
 
 TEST_F(LaneEndToRosMessageTest, LaneEndAtFinish) {
-  LaneMock lane(kLaneId);
+  LaneMock lane;
   EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
   const maliput::api::LaneEnd lane_end(&lane, maliput::api::LaneEnd::Which::kFinish);
 
@@ -179,9 +201,9 @@ GTEST_TEST(LaneEndSetToRosMessageTest, ValidLaneEndSet) {
   const maliput::api::LaneId kLaneIdB{"lane_id_b"};
   const maliput::api::LaneEnd::Which kWhichA{maliput::api::LaneEnd::Which::kStart};
   const maliput::api::LaneEnd::Which kWhichB{maliput::api::LaneEnd::Which::kFinish};
-  LaneMock lane_a(kLaneIdA);
+  LaneMock lane_a;
   EXPECT_CALL(lane_a, do_id()).WillRepeatedly(Return(kLaneIdA));
-  LaneMock lane_b(kLaneIdB);
+  LaneMock lane_b;
   EXPECT_CALL(lane_b, do_id()).WillRepeatedly(Return(kLaneIdB));
   const maliput::api::LaneEnd lane_end_a(&lane_a, kWhichA);
   const maliput::api::LaneEnd lane_end_b(&lane_b, kWhichB);
@@ -218,9 +240,9 @@ class BranchPointToRosMessageTest : public ::testing::Test {
 };
 
 TEST_F(BranchPointToRosMessageTest, ValidBranchPoint) {
-  LaneMock lane_a(kLaneIdA);
+  LaneMock lane_a;
   EXPECT_CALL(lane_a, do_id()).WillRepeatedly(Return(kLaneIdA));
-  LaneMock lane_b(kLaneIdB);
+  LaneMock lane_b;
   EXPECT_CALL(lane_b, do_id()).WillRepeatedly(Return(kLaneIdB));
   const maliput::api::LaneEnd lane_end_a(&lane_a, kWhichA);
   const maliput::api::LaneEnd lane_end_b(&lane_b, kWhichB);
@@ -230,7 +252,7 @@ TEST_F(BranchPointToRosMessageTest, ValidBranchPoint) {
   LaneEndSetMock lane_end_set_b;
   EXPECT_CALL(lane_end_set_b, do_size()).WillRepeatedly(Return(1));
   EXPECT_CALL(lane_end_set_b, do_get(0)).WillRepeatedly(ReturnRef(lane_end_b));
-  RoadGeometryMock road_geometry(kRoadGeometryId);
+  RoadGeometryMock road_geometry;
   EXPECT_CALL(road_geometry, do_id()).WillRepeatedly(Return(kRoadGeometryId));
   BranchPointMock branch_point;
   EXPECT_CALL(branch_point, do_id()).WillRepeatedly(Return(kBranchPointId));
@@ -251,13 +273,13 @@ TEST_F(BranchPointToRosMessageTest, ValidBranchPoint) {
 }
 
 TEST_F(BranchPointToRosMessageTest, BranchPointWithEmptyBSide) {
-  LaneMock lane_a(kLaneIdA);
+  LaneMock lane_a;
   EXPECT_CALL(lane_a, do_id()).WillRepeatedly(Return(kLaneIdA));
   const maliput::api::LaneEnd lane_end_a(&lane_a, kWhichA);
   LaneEndSetMock lane_end_set_a;
   EXPECT_CALL(lane_end_set_a, do_size()).WillRepeatedly(Return(1));
   EXPECT_CALL(lane_end_set_a, do_get(0)).WillRepeatedly(ReturnRef(lane_end_a));
-  RoadGeometryMock road_geometry(kRoadGeometryId);
+  RoadGeometryMock road_geometry;
   EXPECT_CALL(road_geometry, do_id()).WillRepeatedly(Return(kRoadGeometryId));
   BranchPointMock branch_point;
   EXPECT_CALL(branch_point, do_id()).WillRepeatedly(Return(kBranchPointId));
@@ -288,9 +310,9 @@ GTEST_TEST(SegmentToRosMessageTest, ValidSegment) {
   const maliput::api::LaneId kLaneIdB{"lane_id_b"};
   const maliput::api::JunctionId kJunctionId{"junction_id"};
   const maliput::api::SegmentId kSegmentId{"segment_id"};
-  LaneMock lane_a(kLaneIdA);
+  LaneMock lane_a;
   EXPECT_CALL(lane_a, do_id()).WillRepeatedly(Return(kLaneIdA));
-  LaneMock lane_b(kLaneIdB);
+  LaneMock lane_b;
   EXPECT_CALL(lane_b, do_id()).WillRepeatedly(Return(kLaneIdB));
   JunctionMock junction;
   EXPECT_CALL(junction, do_id()).WillRepeatedly(Return(kJunctionId));
@@ -328,7 +350,7 @@ GTEST_TEST(JunctionToRosMessageTest, ValidJunction) {
   EXPECT_CALL(segment_a, do_id()).WillRepeatedly(Return(kSgmentIdA));
   SegmentMock segment_b;
   EXPECT_CALL(segment_b, do_id()).WillRepeatedly(Return(kSgmentIdB));
-  RoadGeometryMock road_geometry(kRoadGeometryId);
+  RoadGeometryMock road_geometry;
   EXPECT_CALL(road_geometry, do_id()).WillRepeatedly(Return(kRoadGeometryId));
   JunctionMock junction;
   EXPECT_CALL(junction, do_id()).WillRepeatedly(Return(kJunctionId));
@@ -374,7 +396,7 @@ GTEST_TEST(RoadGeometryToRosMessageTest, ValidRoadGeometry) {
   EXPECT_CALL(branch_point_a, do_id()).WillRepeatedly(Return(kBranchPointIdA));
   BranchPointMock branch_point_b;
   EXPECT_CALL(branch_point_b, do_id()).WillRepeatedly(Return(kBranchPointIdB));
-  RoadGeometryMock road_geometry(kRoadGeometryId);
+  RoadGeometryMock road_geometry;
   EXPECT_CALL(road_geometry, do_id()).WillRepeatedly(Return(kRoadGeometryId));
   EXPECT_CALL(road_geometry, do_linear_tolerance()).WillRepeatedly(Return(kLinearTolerance));
   EXPECT_CALL(road_geometry, do_angular_tolerance()).WillRepeatedly(Return(kAngularTolerance));
@@ -451,13 +473,13 @@ class LaneToRosMessageTest : public ::testing::Test {
   }
 
   SegmentMock segment;
-  LaneMock left_lane{kLeftLaneId};
-  LaneMock right_lane{kRightLaneId};
-  LaneMock default_start_lane{kDefaultStartLaneId};
-  LaneMock default_finish_lane{kDefaultFinishLaneId};
+  LaneMock left_lane;
+  LaneMock right_lane;
+  LaneMock default_start_lane;
+  LaneMock default_finish_lane;
   BranchPointMock start_branch_point;
   BranchPointMock finish_branch_point;
-  LaneMock lane{kLaneId};
+  LaneMock lane;
 };
 
 TEST_F(LaneToRosMessageTest, FullLane) {

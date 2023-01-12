@@ -34,6 +34,7 @@
 #include <string>
 #include <utility>
 
+#include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
@@ -67,6 +68,7 @@ namespace ros {
 /// - MaliputQueryNode::on_cleanup(): the maliput::api::RoadNetwork, the MaliputQuery, and the services are torn down.
 ///
 /// This query server offers:
+/// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
 class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  public:
@@ -81,6 +83,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
                    const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
  private:
+  static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
   static constexpr const char* kYamlConfigurationPathDescription =
@@ -88,6 +91,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
   // @return The path to the YAMl file containing the maliput plugin configuration from the node parameter.
   std::string GetMaliputYamlFilePath() const;
+
+  // @brief Responds the maliput::api::Junction configuration.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::JunctionId to query.
+  // @param[out] response Loads the maliput::api::Junction description.
+  void JunctionCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Junction::Request> request,
+                        std::shared_ptr<maliput_ros_interfaces::srv::Junction::Response> response) const;
 
   // @brief Responds the maliput::api::RoadGeometry configuration.
   // @pre The node must be in the ACTIVE state.
@@ -142,6 +152,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
   // Works as a barrier to all service callbacks. When it is true, callbacks can operate.
   std::atomic<bool> is_active_;
+  // /junction service.
+  rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
   // Proxy to a maliput::api::RoadNetwork queries.
