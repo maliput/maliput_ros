@@ -447,6 +447,7 @@ TEST_F(JunctionByIdServiceCallTest, ValidResquestAndResponse) {
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
+
   ASSERT_EQ(response->junction.id.id, kJunctionId.string());
   ASSERT_EQ(response->junction.road_geometry_id.id, kRoadGeometryId.string());
   ASSERT_EQ(response->junction.segment_ids.size(), static_cast<size_t>(kSize));
@@ -478,7 +479,6 @@ TEST_F(JunctionByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
   ASSERT_TRUE(service->wait_for_service(kTimeout));
   auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
   request->id.id = "";
-
   auto future_result = service->async_send_request(request);
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
