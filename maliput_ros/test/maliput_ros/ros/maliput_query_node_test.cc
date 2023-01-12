@@ -298,7 +298,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
 
     auto service = dut_->create_client<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName);
     auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
-    auto future_result = road_geometry_service->async_send_request(request);
+    auto future_result = service->async_send_request(request);
     const auto future_status = future_result.wait_for(kTimeoutServiceCall);
 
     ASSERT_TRUE(future_status == std::future_status::ready);
