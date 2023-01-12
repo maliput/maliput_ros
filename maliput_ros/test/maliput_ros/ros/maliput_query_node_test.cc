@@ -194,6 +194,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::LaneBoundaries::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::LaneBoundaries>(kLaneBoundariesServiceName,
                                                                                          kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
   }
   {
@@ -202,6 +203,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::ToRoadPosition::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToRoadPosition>(kToRoadPositionServiceName,
                                                                                          kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->road_position_result.road_position.lane_id.id.empty());
   }
@@ -220,6 +222,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::ToInertialPose::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToInertialPose>(kToInertialPoseServiceName,
                                                                                          kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
   }
   {
