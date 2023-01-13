@@ -40,6 +40,7 @@
 #include <maliput_ros_interfaces/srv/lane.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <maliput_ros_interfaces/srv/segment.hpp>
+#include <maliput_ros_interfaces/srv/to_inertial_pose.hpp>
 #include <maliput_ros_interfaces/srv/to_road_position.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
@@ -81,6 +82,8 @@ namespace ros {
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
 /// - /segment: looks for a maliput::api::Segment by its ID.
 /// - /to_road_position: maps a maliput::api::InertialPosition into a maliput::api::RoadPosition.
+/// - /to_inertial_pose: maps a maliput::api::RoadPosition into a maliput::api::InertialPosition and the
+/// maliput::api::Rotation there.
 class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  public:
   using LifecyleNodeCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -100,6 +103,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   static constexpr const char* kLaneServiceName = "lane";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kSegmentServiceName = "segment";
+  static constexpr const char* kToInertialPoseServiceName = "to_inertial_pose";
   static constexpr const char* kToRoadPositionServiceName = "to_road_position";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
   static constexpr const char* kYamlConfigurationPathDescription =
@@ -158,6 +162,14 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Holds the maliput::api::RoadPositionResult of the transformation.
   void ToRoadPositionCallback(const std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Request> request,
                               std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Response> response) const;
+
+  // @brief Computes the INERTIAL Frame transformation of a maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition to transform into a maliput::api::InertialPosition and a
+  // maliput::api::Rotation.
+  // @param[out] response Holds the maliput::api::InertialPosition and the maliput::api::Rotation.
+  void ToInertialPoseCallback(const std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Request> request,
+                              std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Response> response) const;
 
   // @brief Loads the maliput::api::RoadNetwork from the yaml_configuration_path contents.
   // @return true When the load procedure is successful.
@@ -219,6 +231,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   rclcpp::Service<maliput_ros_interfaces::srv::Segment>::SharedPtr segment_srv_;
   // /to_road_position service.
   rclcpp::Service<maliput_ros_interfaces::srv::ToRoadPosition>::SharedPtr to_road_position_srv_;
+  // /to_inertial_pose service.
+  rclcpp::Service<maliput_ros_interfaces::srv::ToInertialPose>::SharedPtr to_inertial_pose_srv_;
   // Proxy to a maliput::api::RoadNetwork queries.
   std::unique_ptr<maliput_ros::ros::MaliputQuery> maliput_query_;
 };

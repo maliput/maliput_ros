@@ -61,6 +61,7 @@ install(
 
 ament_add_gmock(branch_point_service_test branch_point_service_test.cc)
 ament_add_gmock(junction_service_test junction_service_test.cc)
+ament_add_gmock(lane_geometry_services_test lane_geometry_services_test.cc)
 ament_add_gmock(lane_service_test lane_service_test.cc)
 ament_add_gmock(maliput_query_test maliput_query_test.cc)
 ament_add_gmock(maliput_query_node_test maliput_query_node_test.cc)
@@ -103,6 +104,7 @@ endmacro()
 
 add_dependencies_to_test(branch_point_service_test)
 add_dependencies_to_test(junction_service_test)
+add_dependencies_to_test(lane_geometry_services_test)
 add_dependencies_to_test(lane_service_test)
 add_dependencies_to_test(maliput_query_test)
 add_dependencies_to_test(maliput_query_node_test)

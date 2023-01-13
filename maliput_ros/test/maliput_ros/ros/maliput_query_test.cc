@@ -168,6 +168,37 @@ TEST_F(MaliputQueryTest, FindRoadPositions) {
   ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result[0], kRoadPositionResult, 0. /* tolerance */));
 }
 
+// Validates MaliputQuery redirects ther query through the Lane.
+TEST_F(MaliputQueryTest, ToInertialPoseWithValidValues) {
+  const LaneMock lane;
+  const maliput::api::LanePosition kLanePosition{1., 2., 3.};
+  const maliput::api::InertialPosition kInertialPosition{4., 5., 6.};
+  EXPECT_CALL(lane, DoToInertialPosition(::testing::_)).WillRepeatedly(Return(kInertialPosition));
+  // A quaternion that rotates x->y, y->z, z->x...
+  const maliput::math::Quaternion kQuaternion =
+      maliput::math::Quaternion(M_PI * 2. / 3., maliput::math::Vector3(1.0, 1.0, 1.0).normalized());
+  const maliput::api::Rotation kRotation = maliput::api::Rotation::FromQuat(kQuaternion);
+  EXPECT_CALL(lane, DoGetOrientation(::testing::_)).WillRepeatedly(Return(kRotation));
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+
+  const std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> result =
+      dut_->ToInertialPose(kRoadPosition);
+
+  ASSERT_TRUE(result.has_value());
+  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result->first, kInertialPosition, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsRotationClose(result->second, kRotation, 0. /* tolerance */));
+}
+
+// Validates MaliputQuery returns std::nullopt when lane is nullptr.
+TEST_F(MaliputQueryTest, ToInertialPoseWithInvalidRoadPosition) {
+  const maliput::api::RoadPosition kRoadPosition;
+
+  const std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> result =
+      dut_->ToInertialPose(kRoadPosition);
+
+  ASSERT_FALSE(result.has_value());
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros

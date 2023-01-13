@@ -128,6 +128,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
   ASSERT_STREQ(service_names_and_types[kToRoadPositionServiceName][0].c_str(), kToRoadPositionServiceType);
   ASSERT_STREQ(service_names_and_types[kFindRoadPositionsServiceName][0].c_str(), kFindRoadPositionsServiceType);
+  ASSERT_STREQ(service_names_and_types[kToInertialPoseServiceName][0].c_str(), kToInertialPoseServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -201,6 +202,14 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
         kFindRoadPositionsServiceName, kTimeoutServiceCall, request);
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->road_position_results.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kToInertialPoseServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::ToInertialPose::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToInertialPose>(kToInertialPoseServiceName,
+                                                                                         kTimeoutServiceCall, request);
+    ASSERT_NE(response, nullptr);
   }
 }
 

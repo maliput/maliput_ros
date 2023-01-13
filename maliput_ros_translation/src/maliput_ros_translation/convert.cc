@@ -31,6 +31,7 @@
 #include <optional>
 
 #include <maliput/common/maliput_throw.h>
+#include <maliput/math/quaternion.h>
 #include <maliput/math/vector.h>
 
 namespace maliput_ros_translation {
@@ -251,6 +252,15 @@ maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road
              ? maliput::api::RoadPosition()
              : maliput::api::RoadPosition(road_geometry->ById().GetLane(FromRosMessage(road_position.lane_id)),
                                           FromRosMessage(road_position.pos));
+}
+
+maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation& rotation) {
+  maliput_ros_interfaces::msg::Rotation msg;
+  msg.x = rotation.quat().x();
+  msg.y = rotation.quat().y();
+  msg.z = rotation.quat().z();
+  msg.w = rotation.quat().w();
+  return msg;
 }
 
 }  // namespace maliput_ros_translation

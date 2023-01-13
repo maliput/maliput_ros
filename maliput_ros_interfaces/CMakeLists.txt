@@ -41,6 +41,7 @@ set(MESSAGES
   "msg/RoadGeometryId.msg"
   "msg/RoadPosition.msg"
   "msg/RoadPositionResult.msg"
+  "msg/Rotation.msg"
   "msg/Segment.msg"
   "msg/SegmentId.msg"
 )
@@ -52,6 +53,7 @@ set(SERVICE_MSGS
   "srv/Lane.srv"
   "srv/RoadGeometry.srv"
   "srv/Segment.srv"
+  "srv/ToInertialPose.srv"
   "srv/ToRoadPosition.srv"
 )
 

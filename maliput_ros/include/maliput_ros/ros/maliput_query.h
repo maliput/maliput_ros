@@ -105,6 +105,19 @@ class MaliputQuery final {
     return road_network_->road_geometry()->FindRoadPositions(inertial_position, radius);
   }
 
+  /// Computes the INERTIAL Frame position and orientation of a given maliput::api::RoadPosition @p road_position.
+  /// @param[in] road_position The maliput::api::RoadPosition to map into the INERTIAL Frame.
+  /// @return An optional of a pair holding the maliput::api::InertialPosition and the maliput::api::Rotation at @p
+  /// road_position. When the @p road_position.lane is nullptr, it returns std::nullopt.
+  inline std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> ToInertialPose(
+      const maliput::api::RoadPosition& road_position) const {
+    if (road_position.lane == nullptr) {
+      return {};
+    }
+    return {std::make_pair(road_position.lane->ToInertialPosition(road_position.pos),
+                           road_position.lane->GetOrientation(road_position.pos))};
+  }
+
  private:
   std::unique_ptr<maliput::api::RoadNetwork> road_network_{};
 };

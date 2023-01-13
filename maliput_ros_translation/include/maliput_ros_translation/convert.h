@@ -48,6 +48,7 @@
 #include <maliput_ros_interfaces/msg/road_geometry_id.hpp>
 #include <maliput_ros_interfaces/msg/road_position.hpp>
 #include <maliput_ros_interfaces/msg/road_position_result.hpp>
+#include <maliput_ros_interfaces/msg/rotation.hpp>
 #include <maliput_ros_interfaces/msg/segment.hpp>
 #include <maliput_ros_interfaces/msg/segment_id.hpp>
 
@@ -191,5 +192,10 @@ maliput::api::LanePosition FromRosMessage(const maliput_ros_interfaces::msg::Lan
 /// @throws maliput::common:::assertion_error When @p road_geometry is nullptr.
 maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road_geometry,
                                           const maliput_ros_interfaces::msg::RoadPosition& road_position);
+
+/// Converts a maliput::api::Rotation into maliput_ros_interfaces::msg::Rotation.
+/// @param rotation The rotation to convert.
+/// @return A maliput_ros_interfaces::msg::Rotation.
+maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation& rotation);
 
 }  // namespace maliput_ros_translation

@@ -751,6 +751,19 @@ GTEST_TEST(RoadPositionFromRosMessage, EmptyLaneIdYieldsDefaultConstructedRoadPo
   ASSERT_EQ(dut.pos.h(), 0.);
 }
 
+GTEST_TEST(QuaternionToRosMessage, ValidateConversion) {
+  // A quaternion that rotates x->y, y->z, z->x...
+  const maliput::math::Quaternion kQuaternion =
+      maliput::math::Quaternion(M_PI * 2. / 3., maliput::math::Vector3(1.0, 1.0, 1.0).normalized());
+
+  const maliput_ros_interfaces::msg::Rotation dut = ToRosMessage(maliput::api::Rotation::FromQuat(kQuaternion));
+
+  ASSERT_EQ(dut.x, kQuaternion.x());
+  ASSERT_EQ(dut.y, kQuaternion.y());
+  ASSERT_EQ(dut.z, kQuaternion.z());
+  ASSERT_EQ(dut.w, kQuaternion.w());
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation

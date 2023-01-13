@@ -34,6 +34,7 @@
 #include <stdexcept>
 
 #include <maliput/api/junction.h>
+#include <maliput/api/lane_data.h>
 #include <maliput/api/road_network.h>
 #include <maliput/api/segment.h>
 #include <maliput/common/maliput_throw.h>
@@ -160,6 +161,25 @@ void MaliputQueryNode::ToRoadPositionCallback(
       maliput_query_->ToRoadPosition(maliput_ros_translation::FromRosMessage(request->inertial_position)));
 }
 
+void MaliputQueryNode::ToInertialPoseCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Response> response) const {
+  RCLCPP_INFO(get_logger(), "ToInertialPoseCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const maliput::api::RoadGeometry* road_geometry = maliput_query_->road_geometry();
+  const std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> optional_inertial_pose =
+      maliput_query_->ToInertialPose(maliput_ros_translation::FromRosMessage(road_geometry, request->road_position));
+  if (!optional_inertial_pose.has_value()) {
+    RCLCPP_WARN(get_logger(), "Unknown RoadPosition.");
+    return;
+  }
+  response->position = maliput_ros_translation::ToRosMessage(optional_inertial_pose->first);
+  response->orientation = maliput_ros_translation::ToRosMessage(optional_inertial_pose->second);
+}
+
 std::string MaliputQueryNode::GetMaliputYamlFilePath() const {
   return this->get_parameter(kYamlConfigurationPath).get_parameter_value().get<std::string>();
 }
@@ -208,6 +228,9 @@ bool MaliputQueryNode::InitializeAllServices() {
   to_road_position_srv_ = this->create_service<maliput_ros_interfaces::srv::ToRoadPosition>(
       kToRoadPositionServiceName,
       std::bind(&MaliputQueryNode::ToRoadPositionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  to_inertial_pose_srv_ = this->create_service<maliput_ros_interfaces::srv::ToInertialPose>(
+      kToInertialPoseServiceName,
+      std::bind(&MaliputQueryNode::ToInertialPoseCallback, this, std::placeholders::_1, std::placeholders::_2));
   return true;
 }
 
@@ -220,6 +243,7 @@ void MaliputQueryNode::TearDownAllServices() {
   road_geometry_srv_.reset();
   segment_srv_.reset();
   to_road_position_srv_.reset();
+  to_inertial_pose_srv_.reset();
 }
 
 MaliputQueryNode::LifecyleNodeCallbackReturn MaliputQueryNode::on_activate(const rclcpp_lifecycle::State&) {
