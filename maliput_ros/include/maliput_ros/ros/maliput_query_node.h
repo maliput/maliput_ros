@@ -71,6 +71,7 @@ namespace ros {
 /// - MaliputQueryNode::on_cleanup(): the maliput::api::RoadNetwork, the MaliputQuery, and the services are torn down.
 ///
 /// This query server offers:
+/// - /branch_point: looks for a maliput::api::BranchPoint by its ID.
 /// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /lane: looks for a maliput::api::Lane by its ID.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.

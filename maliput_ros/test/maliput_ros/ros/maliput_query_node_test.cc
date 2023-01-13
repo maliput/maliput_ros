@@ -462,6 +462,7 @@ TEST_F(JunctionByIdServiceCallTest, ValidResquestAndResponse) {
   auto future_status = future_result.wait_for(kTimeoutServiceCall);
   ASSERT_TRUE(future_status == std::future_status::ready);
   const auto response = future_result.get();
+
   ASSERT_EQ(response->junction.id.id, kJunctionId.string());
   ASSERT_EQ(response->junction.road_geometry_id.id, kRoadGeometryId.string());
   ASSERT_EQ(response->junction.segment_ids.size(), static_cast<size_t>(kSize));
