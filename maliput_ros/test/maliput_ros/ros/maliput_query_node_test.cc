@@ -182,6 +182,8 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kRoadGeometryServiceType = "maliput_ros_interfaces/srv/RoadGeometry";
   static constexpr const char* kJunctionServiceName = "/my_namespace/junction";
   static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
+  static constexpr const char* kLaneServiceName = "/my_namespace/lane";
+  static constexpr const char* kLaneServiceType = "maliput_ros_interfaces/srv/Lane";
   static constexpr const char* kSegmentServiceName = "/my_namespace/segment";
   static constexpr const char* kSegmentServiceType = "maliput_ros_interfaces/srv/Segment";
 
@@ -286,8 +288,14 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
 
   ASSERT_STREQ(service_names_and_types[kRoadGeometryServiceName][0].c_str(), kRoadGeometryServiceType);
   ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
+  ASSERT_STREQ(service_names_and_types[kLaneServiceName][0].c_str(), kLaneServiceType);
   ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
 }
+
+template <typename T>
+struct ServiceType {
+  using type = T;
+};
 
 // Makes sure services don't process the request when the node is not ACTIVE.
 TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsToFailure) {
@@ -328,6 +336,18 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     ASSERT_TRUE(future_status == std::future_status::ready);
     const auto response = future_result.get();
     ASSERT_TRUE(response->segment.id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kLaneServiceName, kTimeout, kSleepPeriod));
+
+    auto service = dut_->create_client<maliput_ros_interfaces::srv::Lane>(kLaneServiceName);
+    auto request = std::make_shared<maliput_ros_interfaces::srv::Lane::Request>();
+    auto future_result = service->async_send_request(request);
+    const auto future_status = future_result.wait_for(kTimeoutServiceCall);
+
+    ASSERT_TRUE(future_status == std::future_status::ready);
+    const auto response = future_result.get();
+    ASSERT_TRUE(response->lane.id.id.empty());
   }
 }
 
@@ -546,6 +566,122 @@ TEST_F(SegmentByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
   auto response = future_result.get();
 
   ASSERT_TRUE(response->segment.id.id.empty());
+}
+
+// Test class to wrap the tests of /lane service call.
+class LaneByIdServiceCallTest : public MaliputQueryNodeAfterConfigurationTest {
+ public:
+  void SetUp() override {
+    MaliputQueryNodeAfterConfigurationTest::SetUp();
+    AddNodeToExecutorAndSpin(dut_);
+    TransitionToConfigureFromUnconfigured();
+    TransitionToActiveFromConfigured();
+  }
+};
+
+TEST_F(LaneByIdServiceCallTest, ValidResquestAndResponse) {
+  static constexpr int kIndex{3};
+  static constexpr double kLaneLength{123.456};
+  const maliput::api::BranchPointId kStartBranchPointId{"start_branch_point_id"};
+  const maliput::api::BranchPointId kFinishBranchPointId{"finish_branch_point_id"};
+  const maliput::api::SegmentId kSegmentId{"segment_id"};
+  const maliput::api::LaneId kLeftLaneId{"left_lane_id"};
+  const maliput::api::LaneId kRightLaneId{"right_lane_id"};
+  const maliput::api::LaneId kDefaultStartLaneId{"default_start_lane_id"};
+  const maliput::api::LaneEnd::Which kDefaultStartWhich{maliput::api::LaneEnd::Which::kStart};
+  const maliput::api::LaneId kDefaultFinishLaneId{"default_finish_lane_id"};
+  const maliput::api::LaneEnd::Which kDefaultFinishWhich{maliput::api::LaneEnd::Which::kFinish};
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const std::string kNullLaneId{""};
+  SegmentMock segment;
+  EXPECT_CALL(segment, do_id()).WillRepeatedly(Return(kSegmentId));
+  LaneMock left_lane;
+  EXPECT_CALL(left_lane, do_id()).WillRepeatedly(Return(kLeftLaneId));
+  LaneMock right_lane;
+  EXPECT_CALL(right_lane, do_id()).WillRepeatedly(Return(kRightLaneId));
+  LaneMock default_start_lane;
+  EXPECT_CALL(default_start_lane, do_id()).WillRepeatedly(Return(kDefaultStartLaneId));
+  LaneMock default_finish_lane;
+  EXPECT_CALL(default_finish_lane, do_id()).WillRepeatedly(Return(kDefaultFinishLaneId));
+  BranchPointMock start_branch_point;
+  EXPECT_CALL(start_branch_point, do_id()).WillRepeatedly(Return(kStartBranchPointId));
+  BranchPointMock finish_branch_point;
+  EXPECT_CALL(finish_branch_point, do_id()).WillRepeatedly(Return(kFinishBranchPointId));
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  EXPECT_CALL(lane, do_segment()).WillRepeatedly(Return(&segment));
+  EXPECT_CALL(lane, do_index()).WillRepeatedly(Return(kIndex));
+  EXPECT_CALL(lane, do_to_left()).WillRepeatedly(Return(&left_lane));
+  EXPECT_CALL(lane, do_to_right()).WillRepeatedly(Return(&right_lane));
+  EXPECT_CALL(lane, do_length()).WillRepeatedly(Return(kLaneLength));
+  EXPECT_CALL(lane, DoGetBranchPoint(maliput::api::LaneEnd::Which::kStart)).WillRepeatedly(Return(&start_branch_point));
+  EXPECT_CALL(lane, DoGetBranchPoint(maliput::api::LaneEnd::Which::kFinish))
+      .WillRepeatedly(Return(&finish_branch_point));
+  const std::optional<maliput::api::LaneEnd> default_branch_start =
+      maliput::api::LaneEnd{&default_start_lane, kDefaultStartWhich};
+  const std::optional<maliput::api::LaneEnd> default_branch_finish =
+      maliput::api::LaneEnd{&default_finish_lane, kDefaultFinishWhich};
+  EXPECT_CALL(lane, DoGetDefaultBranch(maliput::api::LaneEnd::Which::kStart))
+      .WillRepeatedly(Return(default_branch_start));
+  EXPECT_CALL(lane, DoGetDefaultBranch(maliput::api::LaneEnd::Which::kFinish))
+      .WillRepeatedly(Return(default_branch_finish));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(&lane));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Lane::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kLaneId);
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Lane>(kLaneServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_EQ(response->lane.id.id, kLaneId.string());
+  ASSERT_EQ(response->lane.segment_id.id, kSegmentId.string());
+  ASSERT_EQ(response->lane.index, kIndex);
+  ASSERT_EQ(response->lane.left_lane.id, kLeftLaneId.string());
+  ASSERT_EQ(response->lane.right_lane.id, kRightLaneId.string());
+  ASSERT_EQ(response->lane.length, kLaneLength);
+  ASSERT_EQ(response->lane.start_branch_point_id.id, kStartBranchPointId.string());
+  ASSERT_EQ(response->lane.finish_branch_point_id.id, kFinishBranchPointId.string());
+  ASSERT_EQ(response->lane.default_start_branch.lane_id.id, kDefaultStartLaneId.string());
+  ASSERT_EQ(response->lane.default_start_branch.end, maliput_ros_interfaces::msg::LaneEnd::WHICHSTART);
+  ASSERT_EQ(response->lane.default_finish_branch.lane_id.id, kDefaultFinishLaneId.string());
+  ASSERT_EQ(response->lane.default_finish_branch.end, maliput_ros_interfaces::msg::LaneEnd::WHICHFINISH);
+}
+
+TEST_F(LaneByIdServiceCallTest, InvalidIdReturnsEmptyResponse) {
+  const maliput::api::LaneId kLaneId{"invalid_id"};
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Lane::Request>();
+  request->id = maliput_ros_translation::ToRosMessage(kLaneId);
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Lane>(kLaneServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_TRUE(response->lane.id.id.empty());
+}
+
+TEST_F(LaneByIdServiceCallTest, EmptyIdReturnsEmptyResponse) {
+  auto request = std::make_shared<maliput_ros_interfaces::srv::Lane::Request>();
+  request->id.id = "";
+
+  auto service = dut_->create_client<maliput_ros_interfaces::srv::Lane>(kLaneServiceName);
+  ASSERT_TRUE(service->wait_for_service(kTimeout));
+  auto future_result = service->async_send_request(request);
+  auto future_status = future_result.wait_for(kTimeoutServiceCall);
+  ASSERT_TRUE(future_status == std::future_status::ready);
+  auto response = future_result.get();
+
+  ASSERT_TRUE(response->lane.id.id.empty());
 }
 
 }  // namespace

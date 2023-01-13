@@ -35,6 +35,7 @@
 #include <utility>
 
 #include <maliput_ros_interfaces/srv/junction.hpp>
+#include <maliput_ros_interfaces/srv/lane.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <maliput_ros_interfaces/srv/segment.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -70,6 +71,7 @@ namespace ros {
 ///
 /// This query server offers:
 /// - /junction: looks for a maliput::api::Junction by its ID.
+/// - /lane: looks for a maliput::api::Lane by its ID.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
 /// - /segment: looks for a maliput::api::Segment by its ID.
 class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
@@ -86,6 +88,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
  private:
   static constexpr const char* kJunctionServiceName = "junction";
+  static constexpr const char* kLaneServiceName = "lane";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kSegmentServiceName = "segment";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
@@ -101,6 +104,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::Junction description.
   void JunctionCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Junction::Request> request,
                         std::shared_ptr<maliput_ros_interfaces::srv::Junction::Response> response) const;
+
+  // @brief Responds the maliput::api::Lane configuration.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::LaneId to query.
+  // @param[out] response Loads the maliput::api::Lane description.
+  void LaneCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Lane::Request> request,
+                    std::shared_ptr<maliput_ros_interfaces::srv::Lane::Response> response) const;
 
   // @brief Responds the maliput::api::RoadGeometry configuration.
   // @pre The node must be in the ACTIVE state.
@@ -164,6 +174,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   std::atomic<bool> is_active_;
   // /junction service.
   rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
+  // /lane service.
+  rclcpp::Service<maliput_ros_interfaces::srv::Lane>::SharedPtr lane_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
   // /segment service.
