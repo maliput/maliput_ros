@@ -263,4 +263,16 @@ maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation&
   return msg;
 }
 
+maliput_ros_interfaces::msg::IsoLaneVelocity ToRosMessage(const maliput::api::IsoLaneVelocity& velocity) {
+  maliput_ros_interfaces::msg::IsoLaneVelocity msg;
+  msg.sigma_v = velocity.sigma_v;
+  msg.rho_v = velocity.rho_v;
+  msg.eta_v = velocity.eta_v;
+  return msg;
+}
+
+maliput::api::IsoLaneVelocity FromRosMessage(const maliput_ros_interfaces::msg::IsoLaneVelocity& velocity) {
+  return maliput::api::IsoLaneVelocity{velocity.sigma_v, velocity.rho_v, velocity.eta_v};
+}
+
 }  // namespace maliput_ros_translation

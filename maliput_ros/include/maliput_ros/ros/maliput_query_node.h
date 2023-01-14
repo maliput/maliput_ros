@@ -35,6 +35,7 @@
 #include <utility>
 
 #include <maliput_ros_interfaces/srv/branch_point.hpp>
+#include <maliput_ros_interfaces/srv/eval_motion_derivatives.hpp>
 #include <maliput_ros_interfaces/srv/find_road_positions.hpp>
 #include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/lane.hpp>
@@ -75,6 +76,8 @@ namespace ros {
 ///
 /// This query server offers:
 /// - /branch_point: looks for a maliput::api::BranchPoint by its ID.
+/// - /eval_motion_derivatives: evaluates the motion derivatives at maliput::api::RoadPosition and scales it by a
+/// certain maliput::api::IsoLaneVelocity.
 /// - /find_road_positions: finds all maliput::api::RoadPositionResult in radius distance from a
 /// maliput::api::InertialPosition.
 /// - /junction: looks for a maliput::api::Junction by its ID.
@@ -98,6 +101,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
  private:
   static constexpr const char* kBranchPointServiceName = "branch_point";
+  static constexpr const char* kEvalMotionDerivativesServiceName = "eval_motion_derivatives";
   static constexpr const char* kFindRoadPositionsServiceName = "find_road_positions";
   static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kLaneServiceName = "lane";
@@ -118,6 +122,15 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::BranchPoint description.
   void BranchPointCallback(const std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Request> request,
                            std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Response> response) const;
+
+  // @brief Evaluates the motion derivatives at a given maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition and the maliput::api::IsoLaneVelocity compute the motion
+  // derivatives.
+  // @param[out] response Packs into a maliput::api::LanePosition the motion derivatives.
+  void EvalMotionDerivativesCallback(
+      const std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request> request,
+      std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Response> response) const;
 
   // @brief Responds all the maliput::api::RoadPositionResults within a given radius distance from a
   // maliput::api::InertialPosition.
@@ -219,6 +232,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   std::atomic<bool> is_active_;
   // /branch_point service.
   rclcpp::Service<maliput_ros_interfaces::srv::BranchPoint>::SharedPtr branch_point_srv_;
+  // /eval_motion_derivatives service.
+  rclcpp::Service<maliput_ros_interfaces::srv::EvalMotionDerivatives>::SharedPtr eval_motion_derivatives_srv_;
   // /find_road_positions service.
   rclcpp::Service<maliput_ros_interfaces::srv::FindRoadPositions>::SharedPtr find_road_positions_srv_;
   // /junction service.

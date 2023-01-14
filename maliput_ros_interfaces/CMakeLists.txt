@@ -30,6 +30,7 @@ set(MESSAGES
   "msg/BranchPoint.msg"
   "msg/BranchPointId.msg"
   "msg/InertialPosition.msg"
+  "msg/IsoLaneVelocity.msg"
   "msg/Junction.msg"
   "msg/JunctionId.msg"
   "msg/Lane.msg"
@@ -48,6 +49,7 @@ set(MESSAGES
 
 set(SERVICE_MSGS
   "srv/BranchPoint.srv"
+  "srv/EvalMotionDerivatives.srv"
   "srv/FindRoadPositions.srv"
   "srv/Junction.srv"
   "srv/Lane.srv"

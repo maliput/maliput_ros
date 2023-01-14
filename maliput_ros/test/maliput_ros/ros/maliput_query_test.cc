@@ -199,6 +199,30 @@ TEST_F(MaliputQueryTest, ToInertialPoseWithInvalidRoadPosition) {
   ASSERT_FALSE(result.has_value());
 }
 
+// Validates MaliputQuery redirects ther query through the Lane and is valid.
+TEST_F(MaliputQueryTest, EvalMotionDerivativesWithValidRoadPosition) {
+  const LaneMock lane;
+  const maliput::api::LanePosition kMotionDerivatives{1., 2., 3.};
+  EXPECT_CALL(lane, DoEvalMotionDerivatives(::testing::_, ::testing::_)).WillRepeatedly(Return(kMotionDerivatives));
+  const maliput::api::LanePosition kLanePosition{4., 5., 6.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  const maliput::api::IsoLaneVelocity kVelocity{7., 8., 9.};
+
+  const maliput::api::LanePosition result = dut_->EvalMotionDerivatives(kRoadPosition, kVelocity);
+
+  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, kMotionDerivatives, 0. /* tolerance */));
+}
+
+// Validates MaliputQuery returns a zero maliput::api::LanePosition when lane is nullptr.
+TEST_F(MaliputQueryTest, EvalMotionDerivativesWithInvalidRoadPosition) {
+  const maliput::api::RoadPosition kRoadPosition;
+  const maliput::api::IsoLaneVelocity kVelocity{7., 8., 9.};
+
+  const maliput::api::LanePosition result = dut_->EvalMotionDerivatives(kRoadPosition, kVelocity);
+
+  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, maliput::api::LanePosition{}, 0. /* tolerance */));
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros

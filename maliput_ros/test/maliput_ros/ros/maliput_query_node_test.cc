@@ -129,6 +129,8 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kToRoadPositionServiceName][0].c_str(), kToRoadPositionServiceType);
   ASSERT_STREQ(service_names_and_types[kFindRoadPositionsServiceName][0].c_str(), kFindRoadPositionsServiceType);
   ASSERT_STREQ(service_names_and_types[kToInertialPoseServiceName][0].c_str(), kToInertialPoseServiceType);
+  ASSERT_STREQ(service_names_and_types[kEvalMotionDerivativesServiceName][0].c_str(),
+               kEvalMotionDerivativesServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -210,6 +212,18 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToInertialPose>(kToInertialPoseServiceName,
                                                                                          kTimeoutServiceCall, request);
     ASSERT_NE(response, nullptr);
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kEvalMotionDerivativesServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
+        kEvalMotionDerivativesServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_EQ(response->lane_derivatives.s, 0.);
+    ASSERT_EQ(response->lane_derivatives.r, 0.);
+    ASSERT_EQ(response->lane_derivatives.h, 0.);
   }
 }
 

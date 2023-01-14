@@ -51,7 +51,7 @@ namespace {
 using ::testing::Return;
 using ::testing::ReturnRef;
 
-// Test class to wrap the tests of /lane service call.
+// Test class to wrap the tests of /to_inertial_pose and /eval_motion_derivatives service calls.
 class LaneGeometryServicesTest : public MaliputQueryNodeAfterConfigurationTest {
  public:
   void SetUp() override {
@@ -109,6 +109,46 @@ TEST_F(LaneGeometryServicesTest, ToInertialPoseInvalidRoadPosition) {
   ASSERT_EQ(response->orientation.y, 0.);
   ASSERT_EQ(response->orientation.z, 0.);
   ASSERT_EQ(response->orientation.w, 0.);
+}
+
+TEST_F(LaneGeometryServicesTest, EvalMotionDerivativesValidRoadPosition) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  const maliput::api::LanePosition kLaneDerivatives{4., 5., 6.};
+  EXPECT_CALL(lane, DoEvalMotionDerivatives(::testing::_, ::testing::_)).WillRepeatedly(Return(kLaneDerivatives));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(&lane));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  const maliput::api::LanePosition kLanePosition{1., 2., 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  const maliput::api::IsoLaneVelocity kVelocity{7., 8., 9.};
+  auto request = std::make_shared<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request>();
+  request->road_position = maliput_ros_translation::ToRosMessage(kRoadPosition);
+  request->velocity = maliput_ros_translation::ToRosMessage(kVelocity);
+
+  auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
+      kEvalMotionDerivativesServiceName, kTimeoutServiceCall, request);
+
+  ASSERT_NE(response, nullptr);
+  ASSERT_EQ(response->lane_derivatives.s, kLaneDerivatives.s());
+  ASSERT_EQ(response->lane_derivatives.r, kLaneDerivatives.r());
+  ASSERT_EQ(response->lane_derivatives.h, kLaneDerivatives.h());
+}
+
+TEST_F(LaneGeometryServicesTest, EvalMotionDerivativesInvalidRoadPosition) {
+  const maliput::api::IsoLaneVelocity kVelocity{1., 2., 3.};
+  auto request = std::make_shared<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request>();
+  request->velocity = maliput_ros_translation::ToRosMessage(kVelocity);
+  request->road_position.lane_id.id = "";
+
+  auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
+      kEvalMotionDerivativesServiceName, kTimeoutServiceCall, request);
+
+  ASSERT_NE(response, nullptr);
+  ASSERT_EQ(response->lane_derivatives.s, 0.);
+  ASSERT_EQ(response->lane_derivatives.r, 0.);
+  ASSERT_EQ(response->lane_derivatives.h, 0.);
 }
 
 }  // namespace

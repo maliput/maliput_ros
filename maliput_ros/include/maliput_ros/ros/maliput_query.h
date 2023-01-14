@@ -118,6 +118,17 @@ class MaliputQuery final {
                            road_position.lane->GetOrientation(road_position.pos))};
   }
 
+  /// Computes the motion derivatives at @p road_position scaled by @p velocity.
+  /// @param[in] road_position The maliput::api::RoadPosition where to compute the motion derivatives.
+  /// @param[in] velocity The maliput::api::IsoLaneVelocity to scale the derivatives.
+  /// @return An optional with the motion derivatives packed into a maliput::api::LanePosition.
+  /// When the @p road_position.lane is nullptr, it returns std::nullopt.
+  inline maliput::api::LanePosition EvalMotionDerivatives(const maliput::api::RoadPosition& road_position,
+                                                          const maliput::api::IsoLaneVelocity& velocity) const {
+    return road_position.lane == nullptr ? maliput::api::LanePosition{}
+                                         : road_position.lane->EvalMotionDerivatives(road_position.pos, velocity);
+  }
+
  private:
   std::unique_ptr<maliput::api::RoadNetwork> road_network_{};
 };

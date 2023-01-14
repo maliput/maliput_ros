@@ -764,6 +764,29 @@ GTEST_TEST(QuaternionToRosMessage, ValidateConversion) {
   ASSERT_EQ(dut.w, kQuaternion.w());
 }
 
+GTEST_TEST(IsoLaneVelocityToRosMessage, ValidateConversion) {
+  const maliput::api::IsoLaneVelocity kVelocity{1., 2., 3.};
+
+  const maliput_ros_interfaces::msg::IsoLaneVelocity dut = ToRosMessage(kVelocity);
+
+  ASSERT_EQ(dut.sigma_v, kVelocity.sigma_v);
+  ASSERT_EQ(dut.rho_v, kVelocity.rho_v);
+  ASSERT_EQ(dut.eta_v, kVelocity.eta_v);
+}
+
+GTEST_TEST(IsoLaneVelocityFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::IsoLaneVelocity velocity;
+  velocity.sigma_v = 1.;
+  velocity.rho_v = 2.;
+  velocity.eta_v = 3.;
+
+  const maliput::api::IsoLaneVelocity dut = FromRosMessage(velocity);
+
+  ASSERT_EQ(dut.sigma_v, velocity.sigma_v);
+  ASSERT_EQ(dut.rho_v, velocity.rho_v);
+  ASSERT_EQ(dut.eta_v, velocity.eta_v);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation

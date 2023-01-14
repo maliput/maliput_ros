@@ -37,6 +37,7 @@
 #include <maliput_ros_interfaces/msg/branch_point.hpp>
 #include <maliput_ros_interfaces/msg/branch_point_id.hpp>
 #include <maliput_ros_interfaces/msg/inertial_position.hpp>
+#include <maliput_ros_interfaces/msg/iso_lane_velocity.hpp>
 #include <maliput_ros_interfaces/msg/junction.hpp>
 #include <maliput_ros_interfaces/msg/junction_id.hpp>
 #include <maliput_ros_interfaces/msg/lane.hpp>
@@ -197,5 +198,15 @@ maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road
 /// @param rotation The rotation to convert.
 /// @return A maliput_ros_interfaces::msg::Rotation.
 maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation& rotation);
+
+/// Converts a maliput::api::IsoLaneVelocity into maliput_ros_interfaces::msg::IsoLaneVelocity.
+/// @param velocity The velocity to convert.
+/// @return A maliput::api::IsoLaneVelocity.
+maliput_ros_interfaces::msg::IsoLaneVelocity ToRosMessage(const maliput::api::IsoLaneVelocity& velocity);
+
+/// Converts a maliput_ros_interfaces::msg::IsoLaneVelocity into maliput::api::IsoLaneVelocity.
+/// @param velocity The velocity to convert.
+/// @return A maliput::api::IsoLaneVelocity.
+maliput::api::IsoLaneVelocity FromRosMessage(const maliput_ros_interfaces::msg::IsoLaneVelocity& velocity);
 
 }  // namespace maliput_ros_translation
