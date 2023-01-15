@@ -50,6 +50,8 @@ using ::testing::ReturnRef;
 // Test class for MaliputQuery.
 class MaliputQueryTest : public ::testing::Test {
  public:
+  static constexpr double kZeroTolerance{0.};
+
   void SetUp() override {
     auto road_geometry = std::make_unique<RoadGeometryMock>();
     road_geometry_ptr_ = road_geometry.get();
@@ -146,7 +148,7 @@ TEST_F(MaliputQueryTest, ToRoadPosition) {
 
   const maliput::api::RoadPositionResult result = dut_->ToRoadPosition(kInertialPosition);
 
-  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result, kRoadPositionResult, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result, kRoadPositionResult, kZeroTolerance));
 }
 
 // Validates MaliputQuery redirects ther query through the RoadGeometry.
@@ -165,7 +167,7 @@ TEST_F(MaliputQueryTest, FindRoadPositions) {
   const std::vector<maliput::api::RoadPositionResult> result = dut_->FindRoadPositions(kInertialPosition, kRadius);
 
   ASSERT_EQ(result.size(), 1u);
-  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result[0], kRoadPositionResult, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsRoadPositionResultClose(result[0], kRoadPositionResult, kZeroTolerance));
 }
 
 // Validates MaliputQuery redirects ther query through the Lane.
@@ -185,8 +187,8 @@ TEST_F(MaliputQueryTest, ToInertialPoseWithValidValues) {
       dut_->ToInertialPose(kRoadPosition);
 
   ASSERT_TRUE(result.has_value());
-  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result->first, kInertialPosition, 0. /* tolerance */));
-  ASSERT_TRUE(maliput::api::test::IsRotationClose(result->second, kRotation, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result->first, kInertialPosition, kZeroTolerance));
+  ASSERT_TRUE(maliput::api::test::IsRotationClose(result->second, kRotation, kZeroTolerance));
 }
 
 // Validates MaliputQuery returns std::nullopt when lane is nullptr.
@@ -210,7 +212,7 @@ TEST_F(MaliputQueryTest, EvalMotionDerivativesWithValidRoadPosition) {
 
   const maliput::api::LanePosition result = dut_->EvalMotionDerivatives(kRoadPosition, kVelocity);
 
-  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, kMotionDerivatives, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, kMotionDerivatives, kZeroTolerance));
 }
 
 // Validates MaliputQuery returns a zero maliput::api::LanePosition when lane is nullptr.
@@ -220,7 +222,38 @@ TEST_F(MaliputQueryTest, EvalMotionDerivativesWithInvalidRoadPosition) {
 
   const maliput::api::LanePosition result = dut_->EvalMotionDerivatives(kRoadPosition, kVelocity);
 
-  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, maliput::api::LanePosition{}, 0. /* tolerance */));
+  ASSERT_TRUE(maliput::api::test::IsLanePositionClose(result, maliput::api::LanePosition{}, kZeroTolerance));
+}
+
+// Validates MaliputQuery redirects boundaries queries through to the Lane.
+TEST_F(MaliputQueryTest, EvalLaneBoundariesWithValidRoadPosition) {
+  const LaneMock lane;
+  static constexpr double kS = 1.;
+  static constexpr double kR = 2.;
+  const maliput::api::RBounds kLaneBounds{-4., 5.};
+  EXPECT_CALL(lane, do_lane_bounds(kS)).WillRepeatedly(Return(kLaneBounds));
+  const maliput::api::RBounds kSegmentBounds{-6., 7.};
+  EXPECT_CALL(lane, do_segment_bounds(kS)).WillRepeatedly(Return(kSegmentBounds));
+  const maliput::api::HBounds kElevationBounds{-8., 9.};
+  EXPECT_CALL(lane, do_elevation_bounds(kS, kR)).WillRepeatedly(Return(kElevationBounds));
+  const maliput::api::LanePosition kLanePosition{kS, kR, 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+
+  const std::optional<MaliputQuery::LaneBoundaries> result = dut_->EvalLaneBoundaries(kRoadPosition);
+
+  ASSERT_TRUE(result.has_value());
+  ASSERT_TRUE(maliput::api::test::IsRBoundsClose(result->lane_boundaries, kLaneBounds, kZeroTolerance));
+  ASSERT_TRUE(maliput::api::test::IsRBoundsClose(result->segment_boundaries, kSegmentBounds, kZeroTolerance));
+  ASSERT_TRUE(maliput::api::test::IsHBoundsClose(result->elevation_boundaries, kElevationBounds, kZeroTolerance));
+}
+
+// Validates MaliputQuery redirects boundaries queries through to the Lane.
+TEST_F(MaliputQueryTest, EvalLaneBoundariesWithInvalidRoadPosition) {
+  const maliput::api::RoadPosition kRoadPosition;
+
+  const std::optional<MaliputQuery::LaneBoundaries> result = dut_->EvalLaneBoundaries(kRoadPosition);
+
+  ASSERT_FALSE(result.has_value());
 }
 
 }  // namespace

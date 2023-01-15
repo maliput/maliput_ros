@@ -129,6 +129,8 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
   static constexpr const char* kLaneServiceName = "/my_namespace/lane";
   static constexpr const char* kLaneServiceType = "maliput_ros_interfaces/srv/Lane";
+  static constexpr const char* kLaneBoundariesServiceName = "/my_namespace/lane_boundaries";
+  static constexpr const char* kLaneBoundariesServiceType = "maliput_ros_interfaces/srv/LaneBoundaries";
   static constexpr const char* kSegmentServiceName = "/my_namespace/segment";
   static constexpr const char* kSegmentServiceType = "maliput_ros_interfaces/srv/Segment";
   static constexpr const char* kToRoadPositionServiceName = "/my_namespace/to_road_position";

@@ -275,4 +275,26 @@ maliput::api::IsoLaneVelocity FromRosMessage(const maliput_ros_interfaces::msg::
   return maliput::api::IsoLaneVelocity{velocity.sigma_v, velocity.rho_v, velocity.eta_v};
 }
 
+maliput_ros_interfaces::msg::HBounds ToRosMessage(const maliput::api::HBounds& h_bounds) {
+  maliput_ros_interfaces::msg::HBounds msg;
+  msg.min = h_bounds.min();
+  msg.max = h_bounds.max();
+  return msg;
+}
+
+maliput::api::HBounds FromRosMessage(const maliput_ros_interfaces::msg::HBounds& h_bounds) {
+  return maliput::api::HBounds(h_bounds.min, h_bounds.max);
+}
+
+maliput_ros_interfaces::msg::RBounds ToRosMessage(const maliput::api::RBounds& r_bounds) {
+  maliput_ros_interfaces::msg::RBounds msg;
+  msg.min = r_bounds.min();
+  msg.max = r_bounds.max();
+  return msg;
+}
+
+maliput::api::RBounds FromRosMessage(const maliput_ros_interfaces::msg::RBounds& r_bounds) {
+  return maliput::api::RBounds(r_bounds.min, r_bounds.max);
+}
+
 }  // namespace maliput_ros_translation

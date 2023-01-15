@@ -125,6 +125,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kBranchPointServiceName][0].c_str(), kBranchPointServiceType);
   ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
   ASSERT_STREQ(service_names_and_types[kLaneServiceName][0].c_str(), kLaneServiceType);
+  ASSERT_STREQ(service_names_and_types[kLaneBoundariesServiceName][0].c_str(), kLaneBoundariesServiceType);
   ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
   ASSERT_STREQ(service_names_and_types[kToRoadPositionServiceName][0].c_str(), kToRoadPositionServiceType);
   ASSERT_STREQ(service_names_and_types[kFindRoadPositionsServiceName][0].c_str(), kFindRoadPositionsServiceType);
@@ -186,6 +187,14 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
 
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->lane.id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kLaneBoundariesServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::LaneBoundaries::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::LaneBoundaries>(kLaneBoundariesServiceName,
+                                                                                         kTimeoutServiceCall, request);
+    ASSERT_NE(response, nullptr);
   }
   {
     ASSERT_TRUE(WaitForService(dut_, kToRoadPositionServiceName, kTimeout, kSleepPeriod));

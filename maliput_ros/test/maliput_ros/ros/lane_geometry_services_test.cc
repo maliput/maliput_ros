@@ -151,6 +151,53 @@ TEST_F(LaneGeometryServicesTest, EvalMotionDerivativesInvalidRoadPosition) {
   ASSERT_EQ(response->lane_derivatives.h, 0.);
 }
 
+TEST_F(LaneGeometryServicesTest, LaneBoundariesValidRoadPosition) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  static constexpr double kS = 1.;
+  static constexpr double kR = 2.;
+  const maliput::api::RBounds kLaneBounds{-4., 5.};
+  EXPECT_CALL(lane, do_lane_bounds(kS)).WillRepeatedly(Return(kLaneBounds));
+  const maliput::api::RBounds kSegmentBounds{-6., 7.};
+  EXPECT_CALL(lane, do_segment_bounds(kS)).WillRepeatedly(Return(kSegmentBounds));
+  const maliput::api::HBounds kElevationBounds{-8., 9.};
+  EXPECT_CALL(lane, do_elevation_bounds(kS, kR)).WillRepeatedly(Return(kElevationBounds));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(&lane));
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoById()).WillRepeatedly(ReturnRef(id_index));
+  const maliput::api::LanePosition kLanePosition{kS, kR, 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  auto request = std::make_shared<maliput_ros_interfaces::srv::LaneBoundaries::Request>();
+  request->road_position = maliput_ros_translation::ToRosMessage(kRoadPosition);
+
+  auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::LaneBoundaries>(kLaneBoundariesServiceName,
+                                                                                       kTimeoutServiceCall, request);
+
+  ASSERT_NE(response, nullptr);
+  ASSERT_EQ(response->lane_bounds.min, kLaneBounds.min());
+  ASSERT_EQ(response->lane_bounds.max, kLaneBounds.max());
+  ASSERT_EQ(response->segment_bounds.min, kSegmentBounds.min());
+  ASSERT_EQ(response->segment_bounds.max, kSegmentBounds.max());
+  ASSERT_EQ(response->elevation_bounds.min, kElevationBounds.min());
+  ASSERT_EQ(response->elevation_bounds.max, kElevationBounds.max());
+}
+
+TEST_F(LaneGeometryServicesTest, LaneBoundariesWithInvalidRoadPosition) {
+  auto request = std::make_shared<maliput_ros_interfaces::srv::LaneBoundaries::Request>();
+
+  auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::LaneBoundaries>(kLaneBoundariesServiceName,
+                                                                                       kTimeoutServiceCall, request);
+
+  ASSERT_NE(response, nullptr);
+  ASSERT_EQ(response->lane_bounds.min, 0.);
+  ASSERT_EQ(response->lane_bounds.max, 0.);
+  ASSERT_EQ(response->segment_bounds.min, 0.);
+  ASSERT_EQ(response->segment_bounds.max, 0.);
+  ASSERT_EQ(response->elevation_bounds.min, 0.);
+  ASSERT_EQ(response->elevation_bounds.max, 0.);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros

@@ -29,6 +29,7 @@ message(STATUS "\n\n========= Project Configuration ========\n")
 set(MESSAGES
   "msg/BranchPoint.msg"
   "msg/BranchPointId.msg"
+  "msg/HBounds.msg"
   "msg/InertialPosition.msg"
   "msg/IsoLaneVelocity.msg"
   "msg/Junction.msg"
@@ -38,6 +39,7 @@ set(MESSAGES
   "msg/LaneEndSet.msg"
   "msg/LaneId.msg"
   "msg/LanePosition.msg"
+  "msg/RBounds.msg"
   "msg/RoadGeometry.msg"
   "msg/RoadGeometryId.msg"
   "msg/RoadPosition.msg"
@@ -53,6 +55,7 @@ set(SERVICE_MSGS
   "srv/FindRoadPositions.srv"
   "srv/Junction.srv"
   "srv/Lane.srv"
+  "srv/LaneBoundaries.srv"
   "srv/RoadGeometry.srv"
   "srv/Segment.srv"
   "srv/ToInertialPose.srv"

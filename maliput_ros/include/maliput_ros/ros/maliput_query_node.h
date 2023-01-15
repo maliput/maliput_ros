@@ -39,6 +39,7 @@
 #include <maliput_ros_interfaces/srv/find_road_positions.hpp>
 #include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/lane.hpp>
+#include <maliput_ros_interfaces/srv/lane_boundaries.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <maliput_ros_interfaces/srv/segment.hpp>
 #include <maliput_ros_interfaces/srv/to_inertial_pose.hpp>
@@ -82,6 +83,7 @@ namespace ros {
 /// maliput::api::InertialPosition.
 /// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /lane: looks for a maliput::api::Lane by its ID.
+/// - /lane_boundaries: computes the maliput::api::Lane boundaries at a given maliput::api::RoadPosition.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
 /// - /segment: looks for a maliput::api::Segment by its ID.
 /// - /to_road_position: maps a maliput::api::InertialPosition into a maliput::api::RoadPosition.
@@ -105,6 +107,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   static constexpr const char* kFindRoadPositionsServiceName = "find_road_positions";
   static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kLaneServiceName = "lane";
+  static constexpr const char* kLaneBoundariesServiceName = "lane_boundaries";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kSegmentServiceName = "segment";
   static constexpr const char* kToInertialPoseServiceName = "to_inertial_pose";
@@ -154,6 +157,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::Lane description.
   void LaneCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Lane::Request> request,
                     std::shared_ptr<maliput_ros_interfaces::srv::Lane::Response> response) const;
+
+  // @brief Responds the maliput::api::Lane boundaries at a given maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition where to evaluate the lane boundaries.
+  // @param[out] response Loads the maliput::api::Lane boundaries.
+  void LaneBoundariesCallback(const std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Request> request,
+                              std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Response> response) const;
 
   // @brief Responds the maliput::api::RoadGeometry configuration.
   // @pre The node must be in the ACTIVE state.
@@ -240,6 +250,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
   // /lane service.
   rclcpp::Service<maliput_ros_interfaces::srv::Lane>::SharedPtr lane_srv_;
+  // /lane_boundaries service.
+  rclcpp::Service<maliput_ros_interfaces::srv::LaneBoundaries>::SharedPtr lane_boundaries_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
   // /segment service.

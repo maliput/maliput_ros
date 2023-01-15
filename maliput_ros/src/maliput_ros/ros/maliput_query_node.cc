@@ -147,6 +147,25 @@ void MaliputQueryNode::LaneCallback(const std::shared_ptr<maliput_ros_interfaces
       maliput_query_->GetLaneBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::LaneBoundariesCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Response> response) const {
+  RCLCPP_INFO(get_logger(), "LaneBoundariesCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const std::optional<MaliputQuery::LaneBoundaries> result = maliput_query_->EvalLaneBoundaries(
+      maliput_ros_translation::FromRosMessage(maliput_query_->road_geometry(), request->road_position));
+  if (!result.has_value()) {
+    RCLCPP_ERROR(get_logger(), "Request /lane_boundaries with invalid RoadPosition.");
+    return;
+  }
+  response->lane_bounds = maliput_ros_translation::ToRosMessage(result->lane_boundaries);
+  response->segment_bounds = maliput_ros_translation::ToRosMessage(result->segment_boundaries);
+  response->elevation_bounds = maliput_ros_translation::ToRosMessage(result->elevation_boundaries);
+}
+
 void MaliputQueryNode::SegmentCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Segment::Request> request,
                                        std::shared_ptr<maliput_ros_interfaces::srv::Segment::Response> response) const {
   RCLCPP_INFO(get_logger(), "SegmentCallback");
@@ -235,6 +254,9 @@ bool MaliputQueryNode::InitializeAllServices() {
       std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
   lane_srv_ = this->create_service<maliput_ros_interfaces::srv::Lane>(
       kLaneServiceName, std::bind(&MaliputQueryNode::LaneCallback, this, std::placeholders::_1, std::placeholders::_2));
+  lane_boundaries_srv_ = this->create_service<maliput_ros_interfaces::srv::LaneBoundaries>(
+      kLaneBoundariesServiceName,
+      std::bind(&MaliputQueryNode::LaneBoundariesCallback, this, std::placeholders::_1, std::placeholders::_2));
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -257,6 +279,7 @@ void MaliputQueryNode::TearDownAllServices() {
   find_road_positions_srv_.reset();
   junction_srv_.reset();
   lane_srv_.reset();
+  lane_boundaries_srv_.reset();
   road_geometry_srv_.reset();
   segment_srv_.reset();
   to_road_position_srv_.reset();

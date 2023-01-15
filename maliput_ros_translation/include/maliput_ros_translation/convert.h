@@ -36,6 +36,7 @@
 #include <maliput/api/segment.h>
 #include <maliput_ros_interfaces/msg/branch_point.hpp>
 #include <maliput_ros_interfaces/msg/branch_point_id.hpp>
+#include <maliput_ros_interfaces/msg/h_bounds.hpp>
 #include <maliput_ros_interfaces/msg/inertial_position.hpp>
 #include <maliput_ros_interfaces/msg/iso_lane_velocity.hpp>
 #include <maliput_ros_interfaces/msg/junction.hpp>
@@ -45,6 +46,7 @@
 #include <maliput_ros_interfaces/msg/lane_end_set.hpp>
 #include <maliput_ros_interfaces/msg/lane_id.hpp>
 #include <maliput_ros_interfaces/msg/lane_position.hpp>
+#include <maliput_ros_interfaces/msg/r_bounds.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry_id.hpp>
 #include <maliput_ros_interfaces/msg/road_position.hpp>
@@ -201,12 +203,32 @@ maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation&
 
 /// Converts a maliput::api::IsoLaneVelocity into maliput_ros_interfaces::msg::IsoLaneVelocity.
 /// @param velocity The velocity to convert.
-/// @return A maliput::api::IsoLaneVelocity.
+/// @return A maliput_ros_interfaces::msg::IsoLaneVelocity.
 maliput_ros_interfaces::msg::IsoLaneVelocity ToRosMessage(const maliput::api::IsoLaneVelocity& velocity);
 
 /// Converts a maliput_ros_interfaces::msg::IsoLaneVelocity into maliput::api::IsoLaneVelocity.
 /// @param velocity The velocity to convert.
 /// @return A maliput::api::IsoLaneVelocity.
 maliput::api::IsoLaneVelocity FromRosMessage(const maliput_ros_interfaces::msg::IsoLaneVelocity& velocity);
+
+/// Converts a maliput::api::HBounds into maliput_ros_interfaces::msg::HBounds.
+/// @param h_bounds The elevation bounds to convert.
+/// @return A maliput::api::HBounds.
+maliput_ros_interfaces::msg::HBounds ToRosMessage(const maliput::api::HBounds& h_bounds);
+
+/// Converts a maliput_ros_interfaces::msg::HBounds into maliput::api::HBounds.
+/// @param h_bounds The elevation bounds to convert.
+/// @return A maliput::api::HBounds.
+maliput::api::HBounds FromRosMessage(const maliput_ros_interfaces::msg::HBounds& h_bounds);
+
+/// Converts a maliput::api::RBounds into maliput_ros_interfaces::msg::RBounds.
+/// @param r_bounds The lateral bounds to convert.
+/// @return A maliput::api::RBounds.
+maliput_ros_interfaces::msg::RBounds ToRosMessage(const maliput::api::RBounds& r_bounds);
+
+/// Converts a maliput_ros_interfaces::msg::RBounds into maliput::api::RBounds.
+/// @param r_bounds The lateral bounds to convert.
+/// @return A maliput::api::RBounds.
+maliput::api::RBounds FromRosMessage(const maliput_ros_interfaces::msg::RBounds& r_bounds);
 
 }  // namespace maliput_ros_translation

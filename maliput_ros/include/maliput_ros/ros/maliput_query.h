@@ -48,6 +48,12 @@ namespace ros {
 /// @brief Proxy to a maliput::api::RoadNetwork to make queries to it.
 class MaliputQuery final {
  public:
+  struct LaneBoundaries {
+    maliput::api::RBounds lane_boundaries{};
+    maliput::api::RBounds segment_boundaries{};
+    maliput::api::HBounds elevation_boundaries{};
+  };
+
   /// @brief Constructs a MaliputQuery.
   /// @param[in] road_network The maliput::api::RoadNetwork to hold. It must not be nullptr.
   /// @throws maliput::common::assertion_error When @p road_network is nullptr.
@@ -127,6 +133,19 @@ class MaliputQuery final {
                                                           const maliput::api::IsoLaneVelocity& velocity) const {
     return road_position.lane == nullptr ? maliput::api::LanePosition{}
                                          : road_position.lane->EvalMotionDerivatives(road_position.pos, velocity);
+  }
+
+  /// Computes the lateral and elevation boundaries a given maliput::api::Lane* at @p road_position.
+  /// @param[in] road_position The maliput::api::RoadPosition where to compute the boundaries.
+  /// @return An optional with a LaneBoundaries struct holding the lane, segment and elevation boundaries.
+  /// When the @p road_position.lane is nullptr, it returns std::nullopt.
+  inline std::optional<LaneBoundaries> EvalLaneBoundaries(const maliput::api::RoadPosition& road_position) const {
+    if (road_position.lane == nullptr) {
+      return {};
+    }
+    const maliput::api::Lane* lane = road_position.lane;
+    return {LaneBoundaries{lane->lane_bounds(road_position.pos.s()), lane->segment_bounds(road_position.pos.s()),
+                           lane->elevation_bounds(road_position.pos.s(), road_position.pos.r())}};
   }
 
  private:

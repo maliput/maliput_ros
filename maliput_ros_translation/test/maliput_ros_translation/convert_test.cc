@@ -787,6 +787,46 @@ GTEST_TEST(IsoLaneVelocityFromRosMessage, ValidateConversion) {
   ASSERT_EQ(dut.eta_v, velocity.eta_v);
 }
 
+GTEST_TEST(HBoundsToRosMessage, ValidateConversion) {
+  const maliput::api::HBounds kHBounds{-1., 2.};
+
+  const maliput_ros_interfaces::msg::HBounds dut = ToRosMessage(kHBounds);
+
+  ASSERT_EQ(dut.min, kHBounds.min());
+  ASSERT_EQ(dut.max, kHBounds.max());
+}
+
+GTEST_TEST(HBoundsFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::HBounds h_bounds;
+  h_bounds.min = -1.;
+  h_bounds.max = 2.;
+
+  const maliput::api::HBounds dut = FromRosMessage(h_bounds);
+
+  ASSERT_EQ(dut.min(), h_bounds.min);
+  ASSERT_EQ(dut.max(), h_bounds.max);
+}
+
+GTEST_TEST(RBoundsToRosMessage, ValidateConversion) {
+  const maliput::api::RBounds kRBounds{-1., 2.};
+
+  const maliput_ros_interfaces::msg::RBounds dut = ToRosMessage(kRBounds);
+
+  ASSERT_EQ(dut.min, kRBounds.min());
+  ASSERT_EQ(dut.max, kRBounds.max());
+}
+
+GTEST_TEST(RBoundsFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::RBounds r_bounds;
+  r_bounds.min = -1.;
+  r_bounds.max = 2.;
+
+  const maliput::api::RBounds dut = FromRosMessage(r_bounds);
+
+  ASSERT_EQ(dut.min(), r_bounds.min);
+  ASSERT_EQ(dut.max(), r_bounds.max);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation
