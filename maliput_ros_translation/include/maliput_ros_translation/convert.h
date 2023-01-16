@@ -32,6 +32,7 @@
 #include <maliput/api/junction.h>
 #include <maliput/api/lane.h>
 #include <maliput/api/lane_data.h>
+#include <maliput/api/regions.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/segment.h>
 #include <maliput_ros_interfaces/msg/branch_point.hpp>
@@ -46,12 +47,15 @@
 #include <maliput_ros_interfaces/msg/lane_end_set.hpp>
 #include <maliput_ros_interfaces/msg/lane_id.hpp>
 #include <maliput_ros_interfaces/msg/lane_position.hpp>
+#include <maliput_ros_interfaces/msg/lane_s_range.hpp>
+#include <maliput_ros_interfaces/msg/lane_s_route.hpp>
 #include <maliput_ros_interfaces/msg/r_bounds.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry_id.hpp>
 #include <maliput_ros_interfaces/msg/road_position.hpp>
 #include <maliput_ros_interfaces/msg/road_position_result.hpp>
 #include <maliput_ros_interfaces/msg/rotation.hpp>
+#include <maliput_ros_interfaces/msg/s_range.hpp>
 #include <maliput_ros_interfaces/msg/segment.hpp>
 #include <maliput_ros_interfaces/msg/segment_id.hpp>
 
@@ -230,5 +234,35 @@ maliput_ros_interfaces::msg::RBounds ToRosMessage(const maliput::api::RBounds& r
 /// @param r_bounds The lateral bounds to convert.
 /// @return A maliput::api::RBounds.
 maliput::api::RBounds FromRosMessage(const maliput_ros_interfaces::msg::RBounds& r_bounds);
+
+/// Converts a maliput::api::SRange into maliput_ros_interfaces::msg::SRange.
+/// @param s_range The maliput::api::SRange to convert.
+/// @return A maliput_ros_interfaces::msg::SRange.
+maliput_ros_interfaces::msg::SRange ToRosMessage(const maliput::api::SRange& s_range);
+
+/// Converts a maliput_ros_interfaces::msg::SRange into maliput::api::SRange.
+/// @param s_range The maliput::api::SRange to convert.
+/// @return A maliput::api::SRange.
+maliput::api::SRange FromRosMessage(const maliput_ros_interfaces::msg::SRange& s_range);
+
+/// Converts a maliput::api::LaneSRange into maliput_ros_interfaces::msg::LaneSRange.
+/// @param lane_s_range The maliput::api::LaneSRange to convert.
+/// @return A maliput_ros_interfaces::msg::LaneSRange.
+maliput_ros_interfaces::msg::LaneSRange ToRosMessage(const maliput::api::LaneSRange& lane_s_range);
+
+/// Converts a maliput_ros_interfaces::msg::LaneSRange into maliput::api::LaneSRange.
+/// @param lane_s_range The maliput::api::LaneSRange to convert.
+/// @return A maliput::api::LaneSRange.
+maliput::api::LaneSRange FromRosMessage(const maliput_ros_interfaces::msg::LaneSRange& lane_s_range);
+
+/// Converts a maliput::api::LaneSRoute into maliput_ros_interfaces::msg::LaneSRoute.
+/// @param lane_s_range The maliput::api::LaneSRoute to convert.
+/// @return A maliput_ros_interfaces::msg::LaneSRoute.
+maliput_ros_interfaces::msg::LaneSRoute ToRosMessage(const maliput::api::LaneSRoute& lane_s_route);
+
+/// Converts a maliput_ros_interfaces::msg::LaneSRoute into maliput::api::LaneSRoute.
+/// @param lane_s_route The maliput::api::LaneSRoute to convert.
+/// @return A maliput::api::LaneSRoute.
+maliput::api::LaneSRoute FromRosMessage(const maliput_ros_interfaces::msg::LaneSRoute& lane_s_route);
 
 }  // namespace maliput_ros_translation

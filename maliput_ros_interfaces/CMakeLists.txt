@@ -39,6 +39,8 @@ set(MESSAGES
   "msg/LaneEndSet.msg"
   "msg/LaneId.msg"
   "msg/LanePosition.msg"
+  "msg/LaneSRange.msg"
+  "msg/LaneSRoute.msg"
   "msg/RBounds.msg"
   "msg/RoadGeometry.msg"
   "msg/RoadGeometryId.msg"
@@ -47,10 +49,12 @@ set(MESSAGES
   "msg/Rotation.msg"
   "msg/Segment.msg"
   "msg/SegmentId.msg"
+  "msg/SRange.msg"
 )
 
 set(SERVICE_MSGS
   "srv/BranchPoint.srv"
+  "srv/DeriveLaneSRoutes.srv"
   "srv/EvalMotionDerivatives.srv"
   "srv/FindRoadPositions.srv"
   "srv/Junction.srv"

@@ -32,15 +32,18 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include <maliput/api/branch_point.h>
 #include <maliput/api/junction.h>
 #include <maliput/api/lane.h>
 #include <maliput/api/lane_data.h>
+#include <maliput/api/regions.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
 #include <maliput/api/segment.h>
 #include <maliput/common/maliput_throw.h>
+#include <maliput/routing/derive_lane_s_routes.h>
 
 namespace maliput_ros {
 namespace ros {
@@ -146,6 +149,24 @@ class MaliputQuery final {
     const maliput::api::Lane* lane = road_position.lane;
     return {LaneBoundaries{lane->lane_bounds(road_position.pos.s()), lane->segment_bounds(road_position.pos.s()),
                            lane->elevation_bounds(road_position.pos.s(), road_position.pos.r())}};
+  }
+
+  /// Computes the different maliput::api::LaneSRoutes that joins @p start to @p end.
+  /// @details See maliput::routing::DeriveLaneSRoutes for further details.
+  /// @param[in] start The maliput::api::RoadPosition where to start routing.
+  /// @param[in] end The maliput::api::RoadPosition where to end routing.
+  /// @param[in] max_length_m It is the maximum length of the intermediate lanes
+  /// between @p start and @p end.
+  /// @return A vector of maliput::api::LaneSRoute. If @p start or @p end have nullptr
+  /// as maliput::api::Lanes, or @p max_length_m is negative, or no route has been found
+  /// the vector will be empty.
+  inline std::vector<maliput::api::LaneSRoute> DeriveLaneSRoutes(const maliput::api::RoadPosition& start,
+                                                                 const maliput::api::RoadPosition& end,
+                                                                 double max_length_m) const {
+    if (start.lane == nullptr || end.lane == nullptr || max_length_m < 0.) {
+      return {};
+    }
+    return maliput::routing::DeriveLaneSRoutes(start, end, max_length_m);
   }
 
  private:

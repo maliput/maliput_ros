@@ -827,6 +827,103 @@ GTEST_TEST(RBoundsFromRosMessage, ValidateConversion) {
   ASSERT_EQ(dut.max(), r_bounds.max);
 }
 
+GTEST_TEST(SRangeToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+
+  const maliput_ros_interfaces::msg::SRange dut = ToRosMessage(kSRange);
+
+  ASSERT_EQ(dut.s0, kSRange.s0());
+  ASSERT_EQ(dut.s1, kSRange.s1());
+  ASSERT_EQ(dut.size, kSRange.size());
+  ASSERT_EQ(dut.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(SRangeFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+
+  const maliput::api::SRange dut = FromRosMessage(s_range);
+
+  ASSERT_EQ(dut.s0(), s_range.s0);
+  ASSERT_EQ(dut.s1(), s_range.s1);
+  ASSERT_EQ(dut.size(), s_range.size);
+  ASSERT_EQ(dut.WithS(), s_range.with_s);
+}
+
+GTEST_TEST(LaneSRangeToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, kSRange};
+
+  const maliput_ros_interfaces::msg::LaneSRange dut = ToRosMessage(kLaneSRange);
+
+  ASSERT_EQ(dut.lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.s_range.s0, kSRange.s0());
+  ASSERT_EQ(dut.s_range.s1, kSRange.s1());
+  ASSERT_EQ(dut.s_range.size, kSRange.size());
+  ASSERT_EQ(dut.s_range.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(LaneSRangeFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+  maliput_ros_interfaces::msg::LaneSRange lane_s_range;
+  lane_s_range.lane_id.id = "lane_id";
+  lane_s_range.s_range = s_range;
+
+  const maliput::api::LaneSRange dut = FromRosMessage(lane_s_range);
+
+  ASSERT_EQ(dut.lane_id().string(), "lane_id");
+  ASSERT_EQ(dut.s_range().s0(), s_range.s0);
+  ASSERT_EQ(dut.s_range().s1(), s_range.s1);
+  ASSERT_EQ(dut.s_range().size(), s_range.size);
+  ASSERT_EQ(dut.s_range().WithS(), s_range.with_s);
+}
+
+GTEST_TEST(LaneSRouteToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, kSRange};
+  const maliput::api::LaneSRoute kLaneSRoute{{kLaneSRange}};
+
+  const maliput_ros_interfaces::msg::LaneSRoute dut = ToRosMessage(kLaneSRoute);
+
+  ASSERT_EQ(dut.ranges.size(), 1u);
+  ASSERT_EQ(dut.ranges[0].lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.ranges[0].s_range.s0, kSRange.s0());
+  ASSERT_EQ(dut.ranges[0].s_range.s1, kSRange.s1());
+  ASSERT_EQ(dut.ranges[0].s_range.size, kSRange.size());
+  ASSERT_EQ(dut.ranges[0].s_range.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(LaneSRouteFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+  maliput_ros_interfaces::msg::LaneSRange lane_s_range;
+  lane_s_range.lane_id.id = "lane_id";
+  lane_s_range.s_range = s_range;
+  maliput_ros_interfaces::msg::LaneSRoute lane_s_route;
+  lane_s_route.ranges.push_back(lane_s_range);
+
+  const maliput::api::LaneSRoute dut = FromRosMessage(lane_s_route);
+
+  ASSERT_EQ(dut.ranges().size(), 1u);
+  ASSERT_EQ(dut.ranges()[0].lane_id().string(), "lane_id");
+  ASSERT_EQ(dut.ranges()[0].s_range().s0(), s_range.s0);
+  ASSERT_EQ(dut.ranges()[0].s_range().s1(), s_range.s1);
+  ASSERT_EQ(dut.ranges()[0].s_range().size(), s_range.size);
+  ASSERT_EQ(dut.ranges()[0].s_range().WithS(), s_range.with_s);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation

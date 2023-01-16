@@ -86,6 +86,24 @@ void MaliputQueryNode::BranchPointCallback(
       maliput_query_->GetBranchPointBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::DeriveLaneSRoutesCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Response> response) const {
+  RCLCPP_INFO(get_logger(), "DeriveLaneSRoutesCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const maliput::api::RoadGeometry* road_geometry = maliput_query_->road_geometry();
+  const maliput::api::RoadPosition start = maliput_ros_translation::FromRosMessage(road_geometry, request->start);
+  const maliput::api::RoadPosition end = maliput_ros_translation::FromRosMessage(road_geometry, request->end);
+  const std::vector<maliput::api::LaneSRoute> routes =
+      maliput_query_->DeriveLaneSRoutes(start, end, request->max_length_m);
+  response->lane_s_routes.resize(routes.size());
+  std::transform(routes.cbegin(), routes.cend(), response->lane_s_routes.begin(),
+                 [](const maliput::api::LaneSRoute& route) { return maliput_ros_translation::ToRosMessage(route); });
+}
+
 void MaliputQueryNode::EvalMotionDerivativesCallback(
     const std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request> request,
     std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Response> response) const {
@@ -243,6 +261,9 @@ bool MaliputQueryNode::InitializeAllServices() {
   branch_point_srv_ = this->create_service<maliput_ros_interfaces::srv::BranchPoint>(
       kBranchPointServiceName,
       std::bind(&MaliputQueryNode::BranchPointCallback, this, std::placeholders::_1, std::placeholders::_2));
+  derive_lane_s_routes_srv_ = this->create_service<maliput_ros_interfaces::srv::DeriveLaneSRoutes>(
+      kDeriveLaneSRoutes,
+      std::bind(&MaliputQueryNode::DeriveLaneSRoutesCallback, this, std::placeholders::_1, std::placeholders::_2));
   eval_motion_derivatives_srv_ = this->create_service<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
       kEvalMotionDerivativesServiceName,
       std::bind(&MaliputQueryNode::EvalMotionDerivativesCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -275,6 +296,7 @@ bool MaliputQueryNode::InitializeAllServices() {
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
   branch_point_srv_.reset();
+  derive_lane_s_routes_srv_.reset();
   eval_motion_derivatives_srv_.reset();
   find_road_positions_srv_.reset();
   junction_srv_.reset();

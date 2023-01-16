@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maliput_ros_translation/convert.h"
 
+#include <algorithm>
 #include <optional>
 
 #include <maliput/common/maliput_throw.h>
@@ -295,6 +296,49 @@ maliput_ros_interfaces::msg::RBounds ToRosMessage(const maliput::api::RBounds& r
 
 maliput::api::RBounds FromRosMessage(const maliput_ros_interfaces::msg::RBounds& r_bounds) {
   return maliput::api::RBounds(r_bounds.min, r_bounds.max);
+}
+
+maliput_ros_interfaces::msg::SRange ToRosMessage(const maliput::api::SRange& s_range) {
+  maliput_ros_interfaces::msg::SRange msg;
+  msg.s0 = s_range.s0();
+  msg.s1 = s_range.s1();
+  msg.size = s_range.size();
+  msg.with_s = s_range.WithS();
+  return msg;
+}
+
+maliput::api::SRange FromRosMessage(const maliput_ros_interfaces::msg::SRange& s_range) {
+  return maliput::api::SRange(s_range.s0, s_range.s1);
+}
+
+maliput_ros_interfaces::msg::LaneSRange ToRosMessage(const maliput::api::LaneSRange& lane_s_range) {
+  maliput_ros_interfaces::msg::LaneSRange msg;
+  msg.lane_id = ToRosMessage(lane_s_range.lane_id());
+  msg.s_range = ToRosMessage(lane_s_range.s_range());
+  return msg;
+}
+
+maliput::api::LaneSRange FromRosMessage(const maliput_ros_interfaces::msg::LaneSRange& lane_s_range) {
+  return maliput::api::LaneSRange(FromRosMessage(lane_s_range.lane_id), FromRosMessage(lane_s_range.s_range));
+}
+
+maliput_ros_interfaces::msg::LaneSRoute ToRosMessage(const maliput::api::LaneSRoute& lane_s_route) {
+  maliput_ros_interfaces::msg::LaneSRoute msg;
+  msg.ranges.resize(lane_s_route.ranges().size());
+  std::transform(lane_s_route.ranges().cbegin(), lane_s_route.ranges().cend(), msg.ranges.begin(),
+                 [](const maliput::api::LaneSRange& lane_s_range) { return ToRosMessage(lane_s_range); });
+  msg.length = lane_s_route.length();
+  return msg;
+}
+
+maliput::api::LaneSRoute FromRosMessage(const maliput_ros_interfaces::msg::LaneSRoute& lane_s_route) {
+  std::vector<maliput::api::LaneSRange> ranges;
+  // Not using std::transform() because we ranges should be resized and it fails to compile due to LaneId
+  // LaneSRange.
+  for (const auto& range : lane_s_route.ranges) {
+    ranges.push_back(FromRosMessage(range));
+  }
+  return maliput::api::LaneSRoute(ranges);
 }
 
 }  // namespace maliput_ros_translation

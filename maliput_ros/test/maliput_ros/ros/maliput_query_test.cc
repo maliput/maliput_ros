@@ -256,6 +256,43 @@ TEST_F(MaliputQueryTest, EvalLaneBoundariesWithInvalidRoadPosition) {
   ASSERT_FALSE(result.has_value());
 }
 
+TEST_F(MaliputQueryTest, DeriveLaneSRoutesValidInput) {
+  // RoadPositions are in the same Lane to shortcircuit the search and avoid mocking an entire RoadGeometry.
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  const maliput::api::LanePosition kStartLanePosition{1., 0., 0.};
+  const maliput::api::LanePosition kEndLanePosition{2., 0., 0.};
+  const maliput::api::RoadPosition kStartRoadPosition{&lane, kStartLanePosition};
+  const maliput::api::RoadPosition kEndRoadPosition{&lane, kEndLanePosition};
+  static constexpr double kMaxLengthM{1e6};
+
+  const std::vector<maliput::api::LaneSRoute> result =
+      dut_->DeriveLaneSRoutes(kStartRoadPosition, kEndRoadPosition, kMaxLengthM);
+
+  ASSERT_EQ(result.size(), 1u);
+  ASSERT_EQ(result[0].ranges().size(), 1u);
+  ASSERT_EQ(result[0].ranges()[0].lane_id(), kLaneId);
+  ASSERT_EQ(result[0].ranges()[0].s_range().s0(), kStartLanePosition.s());
+  ASSERT_EQ(result[0].ranges()[0].s_range().s1(), kEndLanePosition.s());
+}
+
+TEST_F(MaliputQueryTest, DeriveLaneSRoutesInvalidInput) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  const maliput::api::LanePosition kStartLanePosition{1., 0., 0.};
+  const maliput::api::LanePosition kEndLanePosition{2., 0., 0.};
+  const maliput::api::RoadPosition kInvalidRoadPosition;
+  const maliput::api::RoadPosition kStartRoadPosition{&lane, kEndLanePosition};
+  const maliput::api::RoadPosition kEndRoadPosition{&lane, kEndLanePosition};
+  static constexpr double kMaxLengthM{1e6};
+  static constexpr double kInvalidMaxLengthM{-1.};
+
+  ASSERT_TRUE(dut_->DeriveLaneSRoutes(kInvalidRoadPosition, kEndRoadPosition, kMaxLengthM).empty());
+  ASSERT_TRUE(dut_->DeriveLaneSRoutes(kStartRoadPosition, kInvalidRoadPosition, kMaxLengthM).empty());
+  ASSERT_TRUE(dut_->DeriveLaneSRoutes(kStartRoadPosition, kEndRoadPosition, kInvalidMaxLengthM).empty());
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros
