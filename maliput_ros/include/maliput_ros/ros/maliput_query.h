@@ -30,11 +30,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include <maliput/api/branch_point.h>
 #include <maliput/api/junction.h>
 #include <maliput/api/lane.h>
+#include <maliput/api/lane_data.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
 #include <maliput/api/segment.h>
@@ -83,6 +85,24 @@ class MaliputQuery final {
   /// @return A maliput::api::BranchPoint when @p id refers to a valid maliput::api::BranchPoint. Otherwise, nullptr.
   inline const maliput::api::BranchPoint* GetBranchPointBy(const maliput::api::BranchPointId& id) const {
     return road_network_->road_geometry()->ById().GetBranchPoint(id);
+  }
+
+  /// Converts @p inertial_position into a maliput::api::RoadPostion.
+  /// @param[in] inertial_position The maliput::api::InertialPosition to convert into a
+  /// maliput::api::RoadPositionResult.
+  /// @return A maliput::api::RoadPositionResult that is mapped from @p inertial_position.
+  inline const maliput::api::RoadPositionResult ToRoadPosition(
+      const maliput::api::InertialPosition& inertial_position) const {
+    return road_network_->road_geometry()->ToRoadPosition(inertial_position, std::nullopt);
+  }
+
+  /// Finds a list of maliput::api::RoadPositionResults that fall within @p radius distance from @p inertial_position.
+  /// @param[in] inertial_position The maliput::api::InertialPosition to  use as a center point.
+  /// @param[in] radius The maximum distance from @p inertial_position that the returned values could have.
+  /// @return A vector of maliput::api::RoadPositionResult.
+  inline const std::vector<maliput::api::RoadPositionResult> FindRoadPositions(
+      const maliput::api::InertialPosition& inertial_position, double radius) const {
+    return road_network_->road_geometry()->FindRoadPositions(inertial_position, radius);
   }
 
  private:

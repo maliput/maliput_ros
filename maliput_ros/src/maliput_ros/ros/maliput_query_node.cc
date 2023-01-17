@@ -29,6 +29,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maliput_ros/ros/maliput_query_node.h"
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 
@@ -84,6 +85,23 @@ void MaliputQueryNode::BranchPointCallback(
       maliput_query_->GetBranchPointBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::FindRoadPositionsCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::FindRoadPositions::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::FindRoadPositions::Response> response) const {
+  RCLCPP_INFO(get_logger(), "FindRoadPositionsCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const std::vector<maliput::api::RoadPositionResult> road_position_results = maliput_query_->FindRoadPositions(
+      maliput_ros_translation::FromRosMessage(request->inertial_position), request->radius);
+  response->road_position_results.resize(road_position_results.size());
+  std::transform(road_position_results.cbegin(), road_position_results.cend(), response->road_position_results.begin(),
+                 [](const maliput::api::RoadPositionResult& road_position_result) {
+                   return maliput_ros_translation::ToRosMessage(road_position_result);
+                 });
+}
+
 void MaliputQueryNode::JunctionCallback(
     const std::shared_ptr<maliput_ros_interfaces::srv::Junction::Request> request,
     std::shared_ptr<maliput_ros_interfaces::srv::Junction::Response> response) const {
@@ -130,6 +148,18 @@ void MaliputQueryNode::SegmentCallback(const std::shared_ptr<maliput_ros_interfa
       maliput_query_->GetSegmentBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::ToRoadPositionCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Response> response) const {
+  RCLCPP_INFO(get_logger(), "ToRoadPositionCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  response->road_position_result = maliput_ros_translation::ToRosMessage(
+      maliput_query_->ToRoadPosition(maliput_ros_translation::FromRosMessage(request->inertial_position)));
+}
+
 std::string MaliputQueryNode::GetMaliputYamlFilePath() const {
   return this->get_parameter(kYamlConfigurationPath).get_parameter_value().get<std::string>();
 }
@@ -161,6 +191,9 @@ bool MaliputQueryNode::InitializeAllServices() {
   branch_point_srv_ = this->create_service<maliput_ros_interfaces::srv::BranchPoint>(
       kBranchPointServiceName,
       std::bind(&MaliputQueryNode::BranchPointCallback, this, std::placeholders::_1, std::placeholders::_2));
+  find_road_positions_srv_ = this->create_service<maliput_ros_interfaces::srv::FindRoadPositions>(
+      kFindRoadPositionsServiceName,
+      std::bind(&MaliputQueryNode::FindRoadPositionsCallback, this, std::placeholders::_1, std::placeholders::_2));
   junction_srv_ = this->create_service<maliput_ros_interfaces::srv::Junction>(
       kJunctionServiceName,
       std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -172,16 +205,21 @@ bool MaliputQueryNode::InitializeAllServices() {
   segment_srv_ = this->create_service<maliput_ros_interfaces::srv::Segment>(
       kSegmentServiceName,
       std::bind(&MaliputQueryNode::SegmentCallback, this, std::placeholders::_1, std::placeholders::_2));
+  to_road_position_srv_ = this->create_service<maliput_ros_interfaces::srv::ToRoadPosition>(
+      kToRoadPositionServiceName,
+      std::bind(&MaliputQueryNode::ToRoadPositionCallback, this, std::placeholders::_1, std::placeholders::_2));
   return true;
 }
 
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
   branch_point_srv_.reset();
+  find_road_positions_srv_.reset();
   junction_srv_.reset();
   lane_srv_.reset();
   road_geometry_srv_.reset();
   segment_srv_.reset();
+  to_road_position_srv_.reset();
 }
 
 MaliputQueryNode::LifecyleNodeCallbackReturn MaliputQueryNode::on_activate(const rclcpp_lifecycle::State&) {

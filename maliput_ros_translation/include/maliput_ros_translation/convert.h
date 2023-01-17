@@ -36,14 +36,18 @@
 #include <maliput/api/segment.h>
 #include <maliput_ros_interfaces/msg/branch_point.hpp>
 #include <maliput_ros_interfaces/msg/branch_point_id.hpp>
+#include <maliput_ros_interfaces/msg/inertial_position.hpp>
 #include <maliput_ros_interfaces/msg/junction.hpp>
 #include <maliput_ros_interfaces/msg/junction_id.hpp>
 #include <maliput_ros_interfaces/msg/lane.hpp>
 #include <maliput_ros_interfaces/msg/lane_end.hpp>
 #include <maliput_ros_interfaces/msg/lane_end_set.hpp>
 #include <maliput_ros_interfaces/msg/lane_id.hpp>
+#include <maliput_ros_interfaces/msg/lane_position.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry.hpp>
 #include <maliput_ros_interfaces/msg/road_geometry_id.hpp>
+#include <maliput_ros_interfaces/msg/road_position.hpp>
+#include <maliput_ros_interfaces/msg/road_position_result.hpp>
 #include <maliput_ros_interfaces/msg/segment.hpp>
 #include <maliput_ros_interfaces/msg/segment_id.hpp>
 
@@ -148,5 +152,44 @@ maliput_ros_interfaces::msg::RoadGeometry ToRosMessage(const maliput::api::RoadG
 /// @param segment The entity to convert to a ROS message.
 /// @return A maliput_ros_interfaces::msg::Segment.
 maliput_ros_interfaces::msg::Segment ToRosMessage(const maliput::api::Segment* segment);
+
+/// Converts a maliput::api::InertialPosition into maliput_ros_interfaces::msg::InertialPosition.
+/// @param inertial_position The position to convert.
+/// @return A maliput_ros_interfaces::msg::InertialPosition.
+maliput_ros_interfaces::msg::InertialPosition ToRosMessage(const maliput::api::InertialPosition& inertial_position);
+
+/// Converts a maliput::api::LanePosition into maliput_ros_interfaces::msg::LanePosition.
+/// @param lane_position The position to convert.
+/// @return A maliput_ros_interfaces::msg::LanePosition.
+maliput_ros_interfaces::msg::LanePosition ToRosMessage(const maliput::api::LanePosition& lane_position);
+
+/// Converts a maliput::api::RoadPosition into maliput_ros_interfaces::msg::RoadPosition.
+/// @param road_position The position to convert.
+/// @return A maliput_ros_interfaces::msg::RoadPosition.
+maliput_ros_interfaces::msg::RoadPosition ToRosMessage(const maliput::api::RoadPosition& road_position);
+
+/// Converts a maliput::api::RoadPositionResult into maliput_ros_interfaces::msg::RoadPositionResult.
+/// @param road_position_result The position to convert.
+/// @return A maliput_ros_interfaces::msg::RoadPositionResult.
+maliput_ros_interfaces::msg::RoadPositionResult ToRosMessage(
+    const maliput::api::RoadPositionResult& road_position_result);
+
+/// Converts a maliput_ros_interfaces::msg::InertialPosition into maliput::api::InertialPosition.
+/// @param inertial_position The position to convert.
+/// @return A maliput::api::InertialPosition.
+maliput::api::InertialPosition FromRosMessage(const maliput_ros_interfaces::msg::InertialPosition& inertial_position);
+
+/// Converts a maliput_ros_interfaces::msg::LanePosition into maliput::api::LanePosition.
+/// @param lane_position The position to convert.
+/// @return A maliput::api::LanePosition.
+maliput::api::LanePosition FromRosMessage(const maliput_ros_interfaces::msg::LanePosition& lane_position);
+
+/// Converts a maliput_ros_interfaces::msg::RoadPosition into maliput::api::RoadPosition.
+/// @param road_geometry The maliput::api::RoadGeometry to obtain the proper maliput::api::Lane pointer.
+/// @param road_position The position to convert.
+/// @return A maliput::api::RoadPosition.
+/// @throws maliput::common:::assertion_error When @p road_geometry is nullptr.
+maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road_geometry,
+                                          const maliput_ros_interfaces::msg::RoadPosition& road_position);
 
 }  // namespace maliput_ros_translation

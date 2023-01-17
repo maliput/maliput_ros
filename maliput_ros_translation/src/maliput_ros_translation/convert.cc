@@ -30,6 +30,7 @@
 
 #include <optional>
 
+#include <maliput/common/maliput_throw.h>
 #include <maliput/math/vector.h>
 
 namespace maliput_ros_translation {
@@ -199,6 +200,57 @@ maliput_ros_interfaces::msg::Segment ToRosMessage(const maliput::api::Segment* s
     msg.lane_ids.push_back(ToRosMessage(segment->lane(i)->id()));
   }
   return msg;
+}
+
+maliput_ros_interfaces::msg::InertialPosition ToRosMessage(const maliput::api::InertialPosition& inertial_position) {
+  maliput_ros_interfaces::msg::InertialPosition msg;
+  msg.x = inertial_position.x();
+  msg.y = inertial_position.y();
+  msg.z = inertial_position.z();
+  return msg;
+}
+
+maliput_ros_interfaces::msg::LanePosition ToRosMessage(const maliput::api::LanePosition& lane_position) {
+  maliput_ros_interfaces::msg::LanePosition msg;
+  msg.s = lane_position.s();
+  msg.r = lane_position.r();
+  msg.h = lane_position.h();
+  return msg;
+}
+
+maliput_ros_interfaces::msg::RoadPosition ToRosMessage(const maliput::api::RoadPosition& road_position) {
+  maliput_ros_interfaces::msg::RoadPosition msg;
+  if (road_position.lane != nullptr) {
+    msg.lane_id = ToRosMessage(road_position.lane->id());
+    msg.pos = ToRosMessage(road_position.pos);
+  }
+  return msg;
+}
+
+maliput_ros_interfaces::msg::RoadPositionResult ToRosMessage(
+    const maliput::api::RoadPositionResult& road_position_result) {
+  maliput_ros_interfaces::msg::RoadPositionResult msg;
+  msg.road_position = ToRosMessage(road_position_result.road_position);
+  msg.nearest_position = ToRosMessage(road_position_result.nearest_position);
+  msg.distance = road_position_result.distance;
+  return msg;
+}
+
+maliput::api::InertialPosition FromRosMessage(const maliput_ros_interfaces::msg::InertialPosition& inertial_position) {
+  return maliput::api::InertialPosition(inertial_position.x, inertial_position.y, inertial_position.z);
+}
+
+maliput::api::LanePosition FromRosMessage(const maliput_ros_interfaces::msg::LanePosition& lane_position) {
+  return maliput::api::LanePosition(lane_position.s, lane_position.r, lane_position.h);
+}
+
+maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road_geometry,
+                                          const maliput_ros_interfaces::msg::RoadPosition& road_position) {
+  MALIPUT_THROW_UNLESS(road_geometry != nullptr);
+  return road_position.lane_id.id.empty()
+             ? maliput::api::RoadPosition()
+             : maliput::api::RoadPosition(road_geometry->ById().GetLane(FromRosMessage(road_position.lane_id)),
+                                          FromRosMessage(road_position.pos));
 }
 
 }  // namespace maliput_ros_translation

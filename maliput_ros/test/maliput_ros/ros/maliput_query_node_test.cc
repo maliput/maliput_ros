@@ -126,6 +126,8 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
   ASSERT_STREQ(service_names_and_types[kLaneServiceName][0].c_str(), kLaneServiceType);
   ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
+  ASSERT_STREQ(service_names_and_types[kToRoadPositionServiceName][0].c_str(), kToRoadPositionServiceType);
+  ASSERT_STREQ(service_names_and_types[kFindRoadPositionsServiceName][0].c_str(), kFindRoadPositionsServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -181,6 +183,24 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
 
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->lane.id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kToRoadPositionServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::ToRoadPosition::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToRoadPosition>(kToRoadPositionServiceName,
+                                                                                         kTimeoutServiceCall, request);
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->road_position_result.road_position.lane_id.id.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kFindRoadPositionsServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::FindRoadPositions::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::FindRoadPositions>(
+        kFindRoadPositionsServiceName, kTimeoutServiceCall, request);
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->road_position_results.empty());
   }
 }
 

@@ -34,9 +34,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <maliput/common/assertion_error.h>
 #include <maliput/test_utilities/mock.h>
-
-#include "maliput/test_utilities/mock_geometry.h"
 
 namespace maliput_ros_translation {
 namespace test {
@@ -125,6 +124,16 @@ class JunctionMock final : public maliput::api::Junction {
   MOCK_METHOD(const maliput::api::RoadGeometry*, do_road_geometry, (), (const));
   MOCK_METHOD(int, do_num_segments, (), (const));
   MOCK_METHOD(const maliput::api::Segment*, do_segment, (int), (const));
+};
+
+/// @brief Google mock maliput::api::RoadGeometry::IdIndex.
+class IdIndexMock final : public maliput::api::RoadGeometry::IdIndex {
+ public:
+  MOCK_METHOD(const maliput::api::Lane*, DoGetLane, (const maliput::api::LaneId&), (const));
+  MOCK_METHOD((const std::unordered_map<maliput::api::LaneId, const maliput::api::Lane*>&), DoGetLanes, (), (const));
+  MOCK_METHOD(const maliput::api::Segment*, DoGetSegment, (const maliput::api::SegmentId&), (const));
+  MOCK_METHOD(const maliput::api::Junction*, DoGetJunction, (const maliput::api::JunctionId&), (const));
+  MOCK_METHOD(const maliput::api::BranchPoint*, DoGetBranchPoint, (const maliput::api::BranchPointId&), (const));
 };
 
 class IdsToRosMessageTest : public ::testing::Test {
@@ -610,6 +619,136 @@ GTEST_TEST(SegmentIdFromRosMessage, ValidateConversion) {
   const maliput::api::SegmentId dut = FromRosMessage(msg);
 
   ASSERT_EQ(dut.string(), kSegmentId);
+}
+
+GTEST_TEST(InertialPositionToRosMessage, ValidateConversion) {
+  const maliput::api::InertialPosition kPosition{1., 2., 3.};
+
+  const maliput_ros_interfaces::msg::InertialPosition dut = ToRosMessage(kPosition);
+
+  ASSERT_EQ(dut.x, kPosition.x());
+  ASSERT_EQ(dut.y, kPosition.y());
+  ASSERT_EQ(dut.z, kPosition.z());
+}
+
+GTEST_TEST(LanePositionToRosMessage, ValidateConversion) {
+  const maliput::api::LanePosition kPosition{1., 2., 3.};
+
+  const maliput_ros_interfaces::msg::LanePosition dut = ToRosMessage(kPosition);
+
+  ASSERT_EQ(dut.s, kPosition.s());
+  ASSERT_EQ(dut.r, kPosition.r());
+  ASSERT_EQ(dut.h, kPosition.h());
+}
+
+GTEST_TEST(RoadPositionToRosMessage, ValidateConversion) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  const maliput::api::LanePosition kPosition{1., 2., 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kPosition};
+
+  const maliput_ros_interfaces::msg::RoadPosition dut = ToRosMessage(kRoadPosition);
+
+  ASSERT_EQ(dut.lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.pos.s, kPosition.s());
+  ASSERT_EQ(dut.pos.r, kPosition.r());
+  ASSERT_EQ(dut.pos.h, kPosition.h());
+}
+
+GTEST_TEST(RoadPositionToRosMessage, ValidateConversionWhenLaneIsNullptr) {
+  const maliput::api::RoadPosition kRoadPosition{};
+
+  const maliput_ros_interfaces::msg::RoadPosition dut = ToRosMessage(kRoadPosition);
+
+  ASSERT_TRUE(dut.lane_id.id.empty());
+}
+
+GTEST_TEST(RoadPositionResultToRosMessage, ValidateConversion) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  const maliput::api::LanePosition kLanePosition{1., 2., 3.};
+  const maliput::api::RoadPosition kRoadPosition{&lane, kLanePosition};
+  const maliput::api::InertialPosition kInertialPosition{4., 5., 6.};
+  constexpr const double kDistance{7.};
+  const maliput::api::RoadPositionResult kPosition{kRoadPosition, kInertialPosition, kDistance};
+
+  const maliput_ros_interfaces::msg::RoadPositionResult dut = ToRosMessage(kPosition);
+
+  ASSERT_EQ(dut.road_position.lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.road_position.pos.s, kLanePosition.s());
+  ASSERT_EQ(dut.road_position.pos.r, kLanePosition.r());
+  ASSERT_EQ(dut.road_position.pos.h, kLanePosition.h());
+  ASSERT_EQ(dut.nearest_position.x, kInertialPosition.x());
+  ASSERT_EQ(dut.nearest_position.y, kInertialPosition.y());
+  ASSERT_EQ(dut.nearest_position.z, kInertialPosition.z());
+  ASSERT_EQ(dut.distance, kDistance);
+}
+
+GTEST_TEST(InertialPositionFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::InertialPosition position;
+  position.x = 1.;
+  position.y = 2.;
+  position.z = 3.;
+
+  const maliput::api::InertialPosition dut = FromRosMessage(position);
+
+  ASSERT_EQ(dut.x(), position.x);
+  ASSERT_EQ(dut.y(), position.y);
+  ASSERT_EQ(dut.z(), position.z);
+}
+
+GTEST_TEST(LanePositionFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::LanePosition position;
+  position.s = 1.;
+  position.r = 2.;
+  position.h = 3.;
+
+  const maliput::api::LanePosition dut = FromRosMessage(position);
+
+  ASSERT_EQ(dut.s(), position.s);
+  ASSERT_EQ(dut.r(), position.r);
+  ASSERT_EQ(dut.h(), position.h);
+}
+
+GTEST_TEST(RoadPositionFromRosMessage, ValidateConversion) {
+  const maliput::api::LanePosition kLanePosition(1., 2., 3.);
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  LaneMock lane;
+  EXPECT_CALL(lane, do_id()).WillRepeatedly(Return(kLaneId));
+  IdIndexMock id_index;
+  EXPECT_CALL(id_index, DoGetLane(kLaneId)).WillRepeatedly(Return(&lane));
+  RoadGeometryMock road_geometry;
+  EXPECT_CALL(road_geometry, DoById()).WillRepeatedly(ReturnRef(id_index));
+  maliput_ros_interfaces::msg::RoadPosition road_position;
+  road_position.lane_id = ToRosMessage(kLaneId);
+  road_position.pos = ToRosMessage(kLanePosition);
+
+  const maliput::api::RoadPosition dut = FromRosMessage(&road_geometry, road_position);
+
+  ASSERT_EQ(dut.lane, &lane);
+  ASSERT_EQ(dut.pos.s(), kLanePosition.s());
+  ASSERT_EQ(dut.pos.r(), kLanePosition.r());
+  ASSERT_EQ(dut.pos.h(), kLanePosition.h());
+}
+
+GTEST_TEST(RoadPositionFromRosMessage, PassingNullRoadGeometryThrows) {
+  maliput_ros_interfaces::msg::RoadPosition road_position;
+
+  ASSERT_THROW({ FromRosMessage(nullptr, road_position); }, maliput::common::assertion_error);
+}
+
+GTEST_TEST(RoadPositionFromRosMessage, EmptyLaneIdYieldsDefaultConstructedRoadPosition) {
+  RoadGeometryMock road_geometry;
+  maliput_ros_interfaces::msg::RoadPosition road_position;
+
+  const maliput::api::RoadPosition dut = FromRosMessage(&road_geometry, road_position);
+
+  ASSERT_EQ(dut.lane, nullptr);
+  ASSERT_EQ(dut.pos.s(), 0.);
+  ASSERT_EQ(dut.pos.r(), 0.);
+  ASSERT_EQ(dut.pos.h(), 0.);
 }
 
 }  // namespace

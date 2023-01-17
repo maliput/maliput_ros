@@ -29,24 +29,30 @@ message(STATUS "\n\n========= Project Configuration ========\n")
 set(MESSAGES
   "msg/BranchPoint.msg"
   "msg/BranchPointId.msg"
+  "msg/InertialPosition.msg"
   "msg/Junction.msg"
   "msg/JunctionId.msg"
   "msg/Lane.msg"
   "msg/LaneEnd.msg"
   "msg/LaneEndSet.msg"
   "msg/LaneId.msg"
+  "msg/LanePosition.msg"
   "msg/RoadGeometry.msg"
   "msg/RoadGeometryId.msg"
+  "msg/RoadPosition.msg"
+  "msg/RoadPositionResult.msg"
   "msg/Segment.msg"
   "msg/SegmentId.msg"
 )
 
 set(SERVICE_MSGS
   "srv/BranchPoint.srv"
+  "srv/FindRoadPositions.srv"
   "srv/Junction.srv"
   "srv/Lane.srv"
   "srv/RoadGeometry.srv"
   "srv/Segment.srv"
+  "srv/ToRoadPosition.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
