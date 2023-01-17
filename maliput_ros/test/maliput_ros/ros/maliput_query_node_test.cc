@@ -138,6 +138,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::RoadGeometry::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::RoadGeometry>(kRoadGeometryServiceName,
                                                                                        kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->road_geometry.id.id.empty());
   }
@@ -147,6 +148,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::BranchPoint::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::BranchPoint>(kBranchPointServiceName,
                                                                                       kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->branch_point.id.id.empty());
   }
@@ -156,6 +158,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::Junction::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::Junction>(kJunctionServiceName,
                                                                                    kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->junction.id.id.empty());
   }
@@ -165,6 +168,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::Segment::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::Segment>(kSegmentServiceName,
                                                                                   kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->segment.id.id.empty());
   }
@@ -174,6 +178,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     auto request = std::make_shared<maliput_ros_interfaces::srv::Lane::Request>();
     auto response =
         MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::Lane>(kLaneServiceName, kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->lane.id.id.empty());
   }

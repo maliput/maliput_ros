@@ -59,28 +59,28 @@ class MaliputQuery final {
 
   /// Finds a maliput::api::Junction by its ID.
   /// @param[in] id The maliput::api::JunctionId.
-  /// @return A maliput::api::Junction when @p id refers to a valid maliput::api::Junction. Otherwise, nullptr..
+  /// @return A maliput::api::Junction when @p id refers to a valid maliput::api::Junction. Otherwise, nullptr.
   inline const maliput::api::Junction* GetJunctionBy(const maliput::api::JunctionId& id) const {
     return road_network_->road_geometry()->ById().GetJunction(id);
   }
 
   /// Finds a maliput::api::Segment by its ID.
   /// @param[in] id The maliput::api::SegmentId.
-  /// @return A maliput::api::Segment when @p id refers to a valid maliput::api::Segment. Otherwise, nullptr..
+  /// @return A maliput::api::Segment when @p id refers to a valid maliput::api::Segment. Otherwise, nullptr.
   inline const maliput::api::Segment* GetSegmentBy(const maliput::api::SegmentId& id) const {
     return road_network_->road_geometry()->ById().GetSegment(id);
   }
 
   /// Finds a maliput::api::Lane by its ID.
   /// @param[in] id The maliput::api::LaneId.
-  /// @return A maliput::api::Lane when @p id refers to a valid maliput::api::Lane. Otherwise, nullptr..
+  /// @return A maliput::api::Lane when @p id refers to a valid maliput::api::Lane. Otherwise, nullptr.
   inline const maliput::api::Lane* GetLaneBy(const maliput::api::LaneId& id) const {
     return road_network_->road_geometry()->ById().GetLane(id);
   }
 
   /// Finds a maliput::api::BranchPoint by its ID.
   /// @param[in] id The maliput::api::BranchPointId.
-  /// @return A maliput::api::BranchPoint when @p id refers to a valid maliput::api::BranchPoint. Otherwise, nullptr..
+  /// @return A maliput::api::BranchPoint when @p id refers to a valid maliput::api::BranchPoint. Otherwise, nullptr.
   inline const maliput::api::BranchPoint* GetBranchPointBy(const maliput::api::BranchPointId& id) const {
     return road_network_->road_geometry()->ById().GetBranchPoint(id);
   }
