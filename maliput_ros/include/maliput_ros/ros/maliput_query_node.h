@@ -34,6 +34,7 @@
 #include <string>
 #include <utility>
 
+#include <maliput_ros_interfaces/srv/branch_point.hpp>
 #include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/lane.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
@@ -70,6 +71,7 @@ namespace ros {
 /// - MaliputQueryNode::on_cleanup(): the maliput::api::RoadNetwork, the MaliputQuery, and the services are torn down.
 ///
 /// This query server offers:
+/// - /branch_point: looks for a maliput::api::BranchPoint by its ID.
 /// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /lane: looks for a maliput::api::Lane by its ID.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
@@ -87,6 +89,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
                    const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
  private:
+  static constexpr const char* kBranchPointServiceName = "branch_point";
   static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kLaneServiceName = "lane";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
@@ -97,6 +100,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
   // @return The path to the YAMl file containing the maliput plugin configuration from the node parameter.
   std::string GetMaliputYamlFilePath() const;
+
+  // @brief Responds the maliput::api::BranchPoint configuration.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::BranchPointId to query.
+  // @param[out] response Loads the maliput::api::BranchPoint description.
+  void BranchPointCallback(const std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Request> request,
+                           std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Response> response) const;
 
   // @brief Responds the maliput::api::Junction configuration.
   // @pre The node must be in the ACTIVE state.
@@ -172,6 +182,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
   // Works as a barrier to all service callbacks. When it is true, callbacks can operate.
   std::atomic<bool> is_active_;
+  // /branch_point service.
+  rclcpp::Service<maliput_ros_interfaces::srv::BranchPoint>::SharedPtr branch_point_srv_;
   // /junction service.
   rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
   // /lane service.
