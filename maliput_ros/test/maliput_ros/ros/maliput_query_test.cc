@@ -293,6 +293,40 @@ TEST_F(MaliputQueryTest, DeriveLaneSRoutesInvalidInput) {
   ASSERT_TRUE(dut_->DeriveLaneSRoutes(kStartRoadPosition, kEndRoadPosition, kInvalidMaxLengthM).empty());
 }
 
+TEST_F(MaliputQueryTest, SampleAheadWaypointsValidInput) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, maliput::api::SRange{10., 20.}};
+  const maliput::api::LaneSRoute kLaneSRoute{{kLaneSRange}};
+  static constexpr double kPathLengthSamplingRate{5.};
+  const maliput::api::InertialPosition kInertialPosition1{10., 5., 1.};
+  const maliput::api::InertialPosition kInertialPosition2{15., 5., 1.};
+  const maliput::api::InertialPosition kInertialPosition3{20., 5., 1.};
+  const std::vector<maliput::api::InertialPosition> kExpectedResult{kInertialPosition1, kInertialPosition2,
+                                                                    kInertialPosition3};
+  EXPECT_CALL(*road_geometry_ptr_, DoSampleAheadWaypoints(::testing::_, kPathLengthSamplingRate))
+      .WillRepeatedly(Return(kExpectedResult));
+
+  const std::vector<maliput::api::InertialPosition> result =
+      dut_->SampleAheadWaypoints(kLaneSRoute, kPathLengthSamplingRate);
+
+  ASSERT_EQ(result.size(), 3u);
+  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result[0], kInertialPosition1, kZeroTolerance));
+  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result[1], kInertialPosition2, kZeroTolerance));
+  ASSERT_TRUE(maliput::api::test::IsInertialPositionClose(result[2], kInertialPosition3, kZeroTolerance));
+}
+
+TEST_F(MaliputQueryTest, SampleAheadWaypointsInValidInput) {
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, maliput::api::SRange{10., 20.}};
+  const maliput::api::LaneSRoute kLaneSRoute{{kLaneSRange}};
+  static constexpr double kPathLengthSamplingRate{-1.};
+
+  const std::vector<maliput::api::InertialPosition> result =
+      dut_->SampleAheadWaypoints(kLaneSRoute, kPathLengthSamplingRate);
+
+  ASSERT_TRUE(result.empty());
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros
