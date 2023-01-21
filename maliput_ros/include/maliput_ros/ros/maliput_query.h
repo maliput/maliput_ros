@@ -120,11 +120,10 @@ class MaliputQuery final {
   /// road_position. When the @p road_position.lane is nullptr, it returns std::nullopt.
   inline std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> ToInertialPose(
       const maliput::api::RoadPosition& road_position) const {
-    if (road_position.lane == nullptr) {
-      return {};
-    }
-    return {std::make_pair(road_position.lane->ToInertialPosition(road_position.pos),
-                           road_position.lane->GetOrientation(road_position.pos))};
+    return road_position.lane == nullptr
+               ? std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>>{}
+               : std::make_pair(road_position.lane->ToInertialPosition(road_position.pos),
+                                road_position.lane->GetOrientation(road_position.pos));
   }
 
   /// Computes the motion derivatives at @p road_position scaled by @p velocity.

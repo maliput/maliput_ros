@@ -333,8 +333,8 @@ maliput_ros_interfaces::msg::LaneSRoute ToRosMessage(const maliput::api::LaneSRo
 
 maliput::api::LaneSRoute FromRosMessage(const maliput_ros_interfaces::msg::LaneSRoute& lane_s_route) {
   std::vector<maliput::api::LaneSRange> ranges;
-  // Not using std::transform() because we ranges should be resized and it fails to compile due to LaneId
-  // LaneSRange.
+  // Not using std::transform() because ranges should be resized and it fails to compile due to the
+  // LaneId in LaneSRange.
   for (const auto& range : lane_s_route.ranges) {
     ranges.push_back(FromRosMessage(range));
   }
