@@ -129,12 +129,20 @@ class MaliputQueryNodeAfterConfigurationTest : public MaliputQueryNodeTest {
   static constexpr const char* kJunctionServiceType = "maliput_ros_interfaces/srv/Junction";
   static constexpr const char* kLaneServiceName = "/my_namespace/lane";
   static constexpr const char* kLaneServiceType = "maliput_ros_interfaces/srv/Lane";
+  static constexpr const char* kLaneBoundariesServiceName = "/my_namespace/lane_boundaries";
+  static constexpr const char* kLaneBoundariesServiceType = "maliput_ros_interfaces/srv/LaneBoundaries";
   static constexpr const char* kSegmentServiceName = "/my_namespace/segment";
   static constexpr const char* kSegmentServiceType = "maliput_ros_interfaces/srv/Segment";
   static constexpr const char* kToRoadPositionServiceName = "/my_namespace/to_road_position";
   static constexpr const char* kToRoadPositionServiceType = "maliput_ros_interfaces/srv/ToRoadPosition";
   static constexpr const char* kFindRoadPositionsServiceName = "/my_namespace/find_road_positions";
   static constexpr const char* kFindRoadPositionsServiceType = "maliput_ros_interfaces/srv/FindRoadPositions";
+  static constexpr const char* kToInertialPoseServiceName = "/my_namespace/to_inertial_pose";
+  static constexpr const char* kToInertialPoseServiceType = "maliput_ros_interfaces/srv/ToInertialPose";
+  static constexpr const char* kEvalMotionDerivativesServiceName = "/my_namespace/eval_motion_derivatives";
+  static constexpr const char* kEvalMotionDerivativesServiceType = "maliput_ros_interfaces/srv/EvalMotionDerivatives";
+  static constexpr const char* kDeriveLaneSRoutesServiceName = "/my_namespace/derive_lane_s_routes";
+  static constexpr const char* kDeriveLaneSRoutesServiceType = "maliput_ros_interfaces/srv/DeriveLaneSRoutes";
 
   const std::string kYamlFilePath{TEST_YAML_CONFIGURATION_PLUGIN_INSTALL_PATH};
   const std::chrono::nanoseconds kTimeout = std::chrono::seconds(1);

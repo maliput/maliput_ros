@@ -34,6 +34,7 @@
 #include <stdexcept>
 
 #include <maliput/api/junction.h>
+#include <maliput/api/lane_data.h>
 #include <maliput/api/road_network.h>
 #include <maliput/api/segment.h>
 #include <maliput/common/maliput_throw.h>
@@ -85,6 +86,37 @@ void MaliputQueryNode::BranchPointCallback(
       maliput_query_->GetBranchPointBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::DeriveLaneSRoutesCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Response> response) const {
+  RCLCPP_INFO(get_logger(), "DeriveLaneSRoutesCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const maliput::api::RoadGeometry* road_geometry = maliput_query_->road_geometry();
+  const maliput::api::RoadPosition start = maliput_ros_translation::FromRosMessage(road_geometry, request->start);
+  const maliput::api::RoadPosition end = maliput_ros_translation::FromRosMessage(road_geometry, request->end);
+  const std::vector<maliput::api::LaneSRoute> routes =
+      maliput_query_->DeriveLaneSRoutes(start, end, request->max_length_m);
+  response->lane_s_routes.resize(routes.size());
+  std::transform(routes.cbegin(), routes.cend(), response->lane_s_routes.begin(),
+                 [](const maliput::api::LaneSRoute& route) { return maliput_ros_translation::ToRosMessage(route); });
+}
+
+void MaliputQueryNode::EvalMotionDerivativesCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Response> response) const {
+  RCLCPP_INFO(get_logger(), "EvalMotionDerivativesCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  response->lane_derivatives = maliput_ros_translation::ToRosMessage(maliput_query_->EvalMotionDerivatives(
+      maliput_ros_translation::FromRosMessage(maliput_query_->road_geometry(), request->road_position),
+      maliput_ros_translation::FromRosMessage(request->velocity)));
+}
+
 void MaliputQueryNode::FindRoadPositionsCallback(
     const std::shared_ptr<maliput_ros_interfaces::srv::FindRoadPositions::Request> request,
     std::shared_ptr<maliput_ros_interfaces::srv::FindRoadPositions::Response> response) const {
@@ -133,6 +165,25 @@ void MaliputQueryNode::LaneCallback(const std::shared_ptr<maliput_ros_interfaces
       maliput_query_->GetLaneBy(maliput_ros_translation::FromRosMessage(request->id)));
 }
 
+void MaliputQueryNode::LaneBoundariesCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Response> response) const {
+  RCLCPP_INFO(get_logger(), "LaneBoundariesCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const std::optional<MaliputQuery::LaneBoundaries> result = maliput_query_->EvalLaneBoundaries(
+      maliput_ros_translation::FromRosMessage(maliput_query_->road_geometry(), request->road_position));
+  if (!result.has_value()) {
+    RCLCPP_ERROR(get_logger(), "Request /lane_boundaries with invalid RoadPosition.");
+    return;
+  }
+  response->lane_bounds = maliput_ros_translation::ToRosMessage(result->lane_boundaries);
+  response->segment_bounds = maliput_ros_translation::ToRosMessage(result->segment_boundaries);
+  response->elevation_bounds = maliput_ros_translation::ToRosMessage(result->elevation_boundaries);
+}
+
 void MaliputQueryNode::SegmentCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Segment::Request> request,
                                        std::shared_ptr<maliput_ros_interfaces::srv::Segment::Response> response) const {
   RCLCPP_INFO(get_logger(), "SegmentCallback");
@@ -158,6 +209,25 @@ void MaliputQueryNode::ToRoadPositionCallback(
   }
   response->road_position_result = maliput_ros_translation::ToRosMessage(
       maliput_query_->ToRoadPosition(maliput_ros_translation::FromRosMessage(request->inertial_position)));
+}
+
+void MaliputQueryNode::ToInertialPoseCallback(
+    const std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Request> request,
+    std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Response> response) const {
+  RCLCPP_INFO(get_logger(), "ToInertialPoseCallback");
+  if (!is_active_.load()) {
+    RCLCPP_WARN(get_logger(), "The node is not active yet.");
+    return;
+  }
+  const maliput::api::RoadGeometry* road_geometry = maliput_query_->road_geometry();
+  const std::optional<std::pair<maliput::api::InertialPosition, maliput::api::Rotation>> optional_inertial_pose =
+      maliput_query_->ToInertialPose(maliput_ros_translation::FromRosMessage(road_geometry, request->road_position));
+  if (!optional_inertial_pose.has_value()) {
+    RCLCPP_WARN(get_logger(), "Unknown RoadPosition.");
+    return;
+  }
+  response->position = maliput_ros_translation::ToRosMessage(optional_inertial_pose->first);
+  response->orientation = maliput_ros_translation::ToRosMessage(optional_inertial_pose->second);
 }
 
 std::string MaliputQueryNode::GetMaliputYamlFilePath() const {
@@ -191,6 +261,12 @@ bool MaliputQueryNode::InitializeAllServices() {
   branch_point_srv_ = this->create_service<maliput_ros_interfaces::srv::BranchPoint>(
       kBranchPointServiceName,
       std::bind(&MaliputQueryNode::BranchPointCallback, this, std::placeholders::_1, std::placeholders::_2));
+  derive_lane_s_routes_srv_ = this->create_service<maliput_ros_interfaces::srv::DeriveLaneSRoutes>(
+      kDeriveLaneSRoutes,
+      std::bind(&MaliputQueryNode::DeriveLaneSRoutesCallback, this, std::placeholders::_1, std::placeholders::_2));
+  eval_motion_derivatives_srv_ = this->create_service<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
+      kEvalMotionDerivativesServiceName,
+      std::bind(&MaliputQueryNode::EvalMotionDerivativesCallback, this, std::placeholders::_1, std::placeholders::_2));
   find_road_positions_srv_ = this->create_service<maliput_ros_interfaces::srv::FindRoadPositions>(
       kFindRoadPositionsServiceName,
       std::bind(&MaliputQueryNode::FindRoadPositionsCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -199,6 +275,9 @@ bool MaliputQueryNode::InitializeAllServices() {
       std::bind(&MaliputQueryNode::JunctionCallback, this, std::placeholders::_1, std::placeholders::_2));
   lane_srv_ = this->create_service<maliput_ros_interfaces::srv::Lane>(
       kLaneServiceName, std::bind(&MaliputQueryNode::LaneCallback, this, std::placeholders::_1, std::placeholders::_2));
+  lane_boundaries_srv_ = this->create_service<maliput_ros_interfaces::srv::LaneBoundaries>(
+      kLaneBoundariesServiceName,
+      std::bind(&MaliputQueryNode::LaneBoundariesCallback, this, std::placeholders::_1, std::placeholders::_2));
   road_geometry_srv_ = this->create_service<maliput_ros_interfaces::srv::RoadGeometry>(
       kRoadGeometryServiceName,
       std::bind(&MaliputQueryNode::RoadGeometryCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -208,18 +287,25 @@ bool MaliputQueryNode::InitializeAllServices() {
   to_road_position_srv_ = this->create_service<maliput_ros_interfaces::srv::ToRoadPosition>(
       kToRoadPositionServiceName,
       std::bind(&MaliputQueryNode::ToRoadPositionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  to_inertial_pose_srv_ = this->create_service<maliput_ros_interfaces::srv::ToInertialPose>(
+      kToInertialPoseServiceName,
+      std::bind(&MaliputQueryNode::ToInertialPoseCallback, this, std::placeholders::_1, std::placeholders::_2));
   return true;
 }
 
 void MaliputQueryNode::TearDownAllServices() {
   RCLCPP_INFO(get_logger(), "TearDownAllServices");
   branch_point_srv_.reset();
+  derive_lane_s_routes_srv_.reset();
+  eval_motion_derivatives_srv_.reset();
   find_road_positions_srv_.reset();
   junction_srv_.reset();
   lane_srv_.reset();
+  lane_boundaries_srv_.reset();
   road_geometry_srv_.reset();
   segment_srv_.reset();
   to_road_position_srv_.reset();
+  to_inertial_pose_srv_.reset();
 }
 
 MaliputQueryNode::LifecyleNodeCallbackReturn MaliputQueryNode::on_activate(const rclcpp_lifecycle::State&) {

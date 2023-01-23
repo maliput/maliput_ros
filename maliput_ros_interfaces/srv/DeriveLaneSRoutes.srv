@@ -1,0 +1,6 @@
+# Equivalent to make maliput::routing::DeriveLaneSRoutes(start, end, max_length_m).
+RoadPosition start
+RoadPosition end
+float64 max_length_m
+---
+LaneSRoute[] lane_s_routes

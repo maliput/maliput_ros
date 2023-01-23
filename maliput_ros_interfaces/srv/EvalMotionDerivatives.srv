@@ -1,0 +1,6 @@
+# Equivalent to finding the maliput::api::Lane via the road_position.lane_id and then
+# querying the lane->EvalMotionDerivatives(road_position.pos, velocity).
+RoadPosition road_position
+IsoLaneVelocity velocity
+---
+LanePosition lane_derivatives

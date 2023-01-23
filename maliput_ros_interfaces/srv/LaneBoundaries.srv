@@ -1,0 +1,8 @@
+# Equivalent to finding the maliput::api::Lane via the road_position.lane_id and then
+# querying the lane->lane_bounds(road_position.pos.s), lane->segment_bounds(road_position.pos.s),
+# and lane->elevation_bounds(road_position.pos.s, road_position.pos.r).
+RoadPosition road_position
+---
+RBounds lane_bounds
+RBounds segment_bounds
+HBounds elevation_bounds

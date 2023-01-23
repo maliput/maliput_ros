@@ -28,9 +28,11 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maliput_ros_translation/convert.h"
 
+#include <algorithm>
 #include <optional>
 
 #include <maliput/common/maliput_throw.h>
+#include <maliput/math/quaternion.h>
 #include <maliput/math/vector.h>
 
 namespace maliput_ros_translation {
@@ -251,6 +253,92 @@ maliput::api::RoadPosition FromRosMessage(const maliput::api::RoadGeometry* road
              ? maliput::api::RoadPosition()
              : maliput::api::RoadPosition(road_geometry->ById().GetLane(FromRosMessage(road_position.lane_id)),
                                           FromRosMessage(road_position.pos));
+}
+
+maliput_ros_interfaces::msg::Rotation ToRosMessage(const maliput::api::Rotation& rotation) {
+  maliput_ros_interfaces::msg::Rotation msg;
+  msg.x = rotation.quat().x();
+  msg.y = rotation.quat().y();
+  msg.z = rotation.quat().z();
+  msg.w = rotation.quat().w();
+  return msg;
+}
+
+maliput_ros_interfaces::msg::IsoLaneVelocity ToRosMessage(const maliput::api::IsoLaneVelocity& velocity) {
+  maliput_ros_interfaces::msg::IsoLaneVelocity msg;
+  msg.sigma_v = velocity.sigma_v;
+  msg.rho_v = velocity.rho_v;
+  msg.eta_v = velocity.eta_v;
+  return msg;
+}
+
+maliput::api::IsoLaneVelocity FromRosMessage(const maliput_ros_interfaces::msg::IsoLaneVelocity& velocity) {
+  return maliput::api::IsoLaneVelocity{velocity.sigma_v, velocity.rho_v, velocity.eta_v};
+}
+
+maliput_ros_interfaces::msg::HBounds ToRosMessage(const maliput::api::HBounds& h_bounds) {
+  maliput_ros_interfaces::msg::HBounds msg;
+  msg.min = h_bounds.min();
+  msg.max = h_bounds.max();
+  return msg;
+}
+
+maliput::api::HBounds FromRosMessage(const maliput_ros_interfaces::msg::HBounds& h_bounds) {
+  return maliput::api::HBounds(h_bounds.min, h_bounds.max);
+}
+
+maliput_ros_interfaces::msg::RBounds ToRosMessage(const maliput::api::RBounds& r_bounds) {
+  maliput_ros_interfaces::msg::RBounds msg;
+  msg.min = r_bounds.min();
+  msg.max = r_bounds.max();
+  return msg;
+}
+
+maliput::api::RBounds FromRosMessage(const maliput_ros_interfaces::msg::RBounds& r_bounds) {
+  return maliput::api::RBounds(r_bounds.min, r_bounds.max);
+}
+
+maliput_ros_interfaces::msg::SRange ToRosMessage(const maliput::api::SRange& s_range) {
+  maliput_ros_interfaces::msg::SRange msg;
+  msg.s0 = s_range.s0();
+  msg.s1 = s_range.s1();
+  msg.size = s_range.size();
+  msg.with_s = s_range.WithS();
+  return msg;
+}
+
+maliput::api::SRange FromRosMessage(const maliput_ros_interfaces::msg::SRange& s_range) {
+  return maliput::api::SRange(s_range.s0, s_range.s1);
+}
+
+maliput_ros_interfaces::msg::LaneSRange ToRosMessage(const maliput::api::LaneSRange& lane_s_range) {
+  maliput_ros_interfaces::msg::LaneSRange msg;
+  msg.lane_id = ToRosMessage(lane_s_range.lane_id());
+  msg.s_range = ToRosMessage(lane_s_range.s_range());
+  return msg;
+}
+
+maliput::api::LaneSRange FromRosMessage(const maliput_ros_interfaces::msg::LaneSRange& lane_s_range) {
+  return maliput::api::LaneSRange(FromRosMessage(lane_s_range.lane_id), FromRosMessage(lane_s_range.s_range));
+}
+
+maliput_ros_interfaces::msg::LaneSRoute ToRosMessage(const maliput::api::LaneSRoute& lane_s_route) {
+  maliput_ros_interfaces::msg::LaneSRoute msg;
+  msg.ranges.resize(lane_s_route.ranges().size());
+  std::transform(lane_s_route.ranges().cbegin(), lane_s_route.ranges().cend(), msg.ranges.begin(),
+                 [](const maliput::api::LaneSRange& lane_s_range) { return ToRosMessage(lane_s_range); });
+  msg.length = lane_s_route.length();
+  return msg;
+}
+
+maliput::api::LaneSRoute FromRosMessage(const maliput_ros_interfaces::msg::LaneSRoute& lane_s_route) {
+  std::vector<maliput::api::LaneSRange> ranges;
+  // Not using std::transform() because ranges should be resized and it fails to compile due to the
+  // LaneId in LaneSRange.
+  for (const auto& range : lane_s_route.ranges) {
+    ranges.push_back(FromRosMessage(range));
+  }
+  return maliput::api::LaneSRoute(ranges);
 }
 
 }  // namespace maliput_ros_translation

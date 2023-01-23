@@ -751,6 +751,179 @@ GTEST_TEST(RoadPositionFromRosMessage, EmptyLaneIdYieldsDefaultConstructedRoadPo
   ASSERT_EQ(dut.pos.h(), 0.);
 }
 
+GTEST_TEST(QuaternionToRosMessage, ValidateConversion) {
+  // A quaternion that rotates x->y, y->z, z->x...
+  const maliput::math::Quaternion kQuaternion =
+      maliput::math::Quaternion(M_PI * 2. / 3., maliput::math::Vector3(1.0, 1.0, 1.0).normalized());
+
+  const maliput_ros_interfaces::msg::Rotation dut = ToRosMessage(maliput::api::Rotation::FromQuat(kQuaternion));
+
+  ASSERT_EQ(dut.x, kQuaternion.x());
+  ASSERT_EQ(dut.y, kQuaternion.y());
+  ASSERT_EQ(dut.z, kQuaternion.z());
+  ASSERT_EQ(dut.w, kQuaternion.w());
+}
+
+GTEST_TEST(IsoLaneVelocityToRosMessage, ValidateConversion) {
+  const maliput::api::IsoLaneVelocity kVelocity{1., 2., 3.};
+
+  const maliput_ros_interfaces::msg::IsoLaneVelocity dut = ToRosMessage(kVelocity);
+
+  ASSERT_EQ(dut.sigma_v, kVelocity.sigma_v);
+  ASSERT_EQ(dut.rho_v, kVelocity.rho_v);
+  ASSERT_EQ(dut.eta_v, kVelocity.eta_v);
+}
+
+GTEST_TEST(IsoLaneVelocityFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::IsoLaneVelocity velocity;
+  velocity.sigma_v = 1.;
+  velocity.rho_v = 2.;
+  velocity.eta_v = 3.;
+
+  const maliput::api::IsoLaneVelocity dut = FromRosMessage(velocity);
+
+  ASSERT_EQ(dut.sigma_v, velocity.sigma_v);
+  ASSERT_EQ(dut.rho_v, velocity.rho_v);
+  ASSERT_EQ(dut.eta_v, velocity.eta_v);
+}
+
+GTEST_TEST(HBoundsToRosMessage, ValidateConversion) {
+  const maliput::api::HBounds kHBounds{-1., 2.};
+
+  const maliput_ros_interfaces::msg::HBounds dut = ToRosMessage(kHBounds);
+
+  ASSERT_EQ(dut.min, kHBounds.min());
+  ASSERT_EQ(dut.max, kHBounds.max());
+}
+
+GTEST_TEST(HBoundsFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::HBounds h_bounds;
+  h_bounds.min = -1.;
+  h_bounds.max = 2.;
+
+  const maliput::api::HBounds dut = FromRosMessage(h_bounds);
+
+  ASSERT_EQ(dut.min(), h_bounds.min);
+  ASSERT_EQ(dut.max(), h_bounds.max);
+}
+
+GTEST_TEST(RBoundsToRosMessage, ValidateConversion) {
+  const maliput::api::RBounds kRBounds{-1., 2.};
+
+  const maliput_ros_interfaces::msg::RBounds dut = ToRosMessage(kRBounds);
+
+  ASSERT_EQ(dut.min, kRBounds.min());
+  ASSERT_EQ(dut.max, kRBounds.max());
+}
+
+GTEST_TEST(RBoundsFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::RBounds r_bounds;
+  r_bounds.min = -1.;
+  r_bounds.max = 2.;
+
+  const maliput::api::RBounds dut = FromRosMessage(r_bounds);
+
+  ASSERT_EQ(dut.min(), r_bounds.min);
+  ASSERT_EQ(dut.max(), r_bounds.max);
+}
+
+GTEST_TEST(SRangeToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+
+  const maliput_ros_interfaces::msg::SRange dut = ToRosMessage(kSRange);
+
+  ASSERT_EQ(dut.s0, kSRange.s0());
+  ASSERT_EQ(dut.s1, kSRange.s1());
+  ASSERT_EQ(dut.size, kSRange.size());
+  ASSERT_EQ(dut.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(SRangeFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+
+  const maliput::api::SRange dut = FromRosMessage(s_range);
+
+  ASSERT_EQ(dut.s0(), s_range.s0);
+  ASSERT_EQ(dut.s1(), s_range.s1);
+  ASSERT_EQ(dut.size(), s_range.size);
+  ASSERT_EQ(dut.WithS(), s_range.with_s);
+}
+
+GTEST_TEST(LaneSRangeToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, kSRange};
+
+  const maliput_ros_interfaces::msg::LaneSRange dut = ToRosMessage(kLaneSRange);
+
+  ASSERT_EQ(dut.lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.s_range.s0, kSRange.s0());
+  ASSERT_EQ(dut.s_range.s1, kSRange.s1());
+  ASSERT_EQ(dut.s_range.size, kSRange.size());
+  ASSERT_EQ(dut.s_range.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(LaneSRangeFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+  maliput_ros_interfaces::msg::LaneSRange lane_s_range;
+  lane_s_range.lane_id.id = "lane_id";
+  lane_s_range.s_range = s_range;
+
+  const maliput::api::LaneSRange dut = FromRosMessage(lane_s_range);
+
+  ASSERT_EQ(dut.lane_id().string(), "lane_id");
+  ASSERT_EQ(dut.s_range().s0(), s_range.s0);
+  ASSERT_EQ(dut.s_range().s1(), s_range.s1);
+  ASSERT_EQ(dut.s_range().size(), s_range.size);
+  ASSERT_EQ(dut.s_range().WithS(), s_range.with_s);
+}
+
+GTEST_TEST(LaneSRouteToRosMessage, ValidateConversion) {
+  const maliput::api::SRange kSRange{1., 2.};
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, kSRange};
+  const maliput::api::LaneSRoute kLaneSRoute{{kLaneSRange}};
+
+  const maliput_ros_interfaces::msg::LaneSRoute dut = ToRosMessage(kLaneSRoute);
+
+  ASSERT_EQ(dut.ranges.size(), 1u);
+  ASSERT_EQ(dut.ranges[0].lane_id.id, kLaneId.string());
+  ASSERT_EQ(dut.ranges[0].s_range.s0, kSRange.s0());
+  ASSERT_EQ(dut.ranges[0].s_range.s1, kSRange.s1());
+  ASSERT_EQ(dut.ranges[0].s_range.size, kSRange.size());
+  ASSERT_EQ(dut.ranges[0].s_range.with_s, kSRange.WithS());
+}
+
+GTEST_TEST(LaneSRouteFromRosMessage, ValidateConversion) {
+  maliput_ros_interfaces::msg::SRange s_range;
+  s_range.s0 = 1.;
+  s_range.s1 = 2.;
+  s_range.size = 1.;
+  s_range.with_s = true;
+  maliput_ros_interfaces::msg::LaneSRange lane_s_range;
+  lane_s_range.lane_id.id = "lane_id";
+  lane_s_range.s_range = s_range;
+  maliput_ros_interfaces::msg::LaneSRoute lane_s_route;
+  lane_s_route.ranges.push_back(lane_s_range);
+
+  const maliput::api::LaneSRoute dut = FromRosMessage(lane_s_route);
+
+  ASSERT_EQ(dut.ranges().size(), 1u);
+  ASSERT_EQ(dut.ranges()[0].lane_id().string(), "lane_id");
+  ASSERT_EQ(dut.ranges()[0].s_range().s0(), s_range.s0);
+  ASSERT_EQ(dut.ranges()[0].s_range().s1(), s_range.s1);
+  ASSERT_EQ(dut.ranges()[0].s_range().size(), s_range.size);
+  ASSERT_EQ(dut.ranges()[0].s_range().WithS(), s_range.with_s);
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace maliput_ros_translation

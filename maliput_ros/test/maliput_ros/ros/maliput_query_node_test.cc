@@ -125,9 +125,14 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kBranchPointServiceName][0].c_str(), kBranchPointServiceType);
   ASSERT_STREQ(service_names_and_types[kJunctionServiceName][0].c_str(), kJunctionServiceType);
   ASSERT_STREQ(service_names_and_types[kLaneServiceName][0].c_str(), kLaneServiceType);
+  ASSERT_STREQ(service_names_and_types[kLaneBoundariesServiceName][0].c_str(), kLaneBoundariesServiceType);
   ASSERT_STREQ(service_names_and_types[kSegmentServiceName][0].c_str(), kSegmentServiceType);
   ASSERT_STREQ(service_names_and_types[kToRoadPositionServiceName][0].c_str(), kToRoadPositionServiceType);
   ASSERT_STREQ(service_names_and_types[kFindRoadPositionsServiceName][0].c_str(), kFindRoadPositionsServiceType);
+  ASSERT_STREQ(service_names_and_types[kToInertialPoseServiceName][0].c_str(), kToInertialPoseServiceType);
+  ASSERT_STREQ(service_names_and_types[kEvalMotionDerivativesServiceName][0].c_str(),
+               kEvalMotionDerivativesServiceType);
+  ASSERT_STREQ(service_names_and_types[kDeriveLaneSRoutesServiceName][0].c_str(), kDeriveLaneSRoutesServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -185,11 +190,21 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
     ASSERT_TRUE(response->lane.id.id.empty());
   }
   {
+    ASSERT_TRUE(WaitForService(dut_, kLaneBoundariesServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::LaneBoundaries::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::LaneBoundaries>(kLaneBoundariesServiceName,
+                                                                                         kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+  }
+  {
     ASSERT_TRUE(WaitForService(dut_, kToRoadPositionServiceName, kTimeout, kSleepPeriod));
 
     auto request = std::make_shared<maliput_ros_interfaces::srv::ToRoadPosition::Request>();
     auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToRoadPosition>(kToRoadPositionServiceName,
                                                                                          kTimeoutServiceCall, request);
+
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->road_position_result.road_position.lane_id.id.empty());
   }
@@ -201,6 +216,37 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
         kFindRoadPositionsServiceName, kTimeoutServiceCall, request);
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->road_position_results.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kToInertialPoseServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::ToInertialPose::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::ToInertialPose>(kToInertialPoseServiceName,
+                                                                                         kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kEvalMotionDerivativesServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::EvalMotionDerivatives>(
+        kEvalMotionDerivativesServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_EQ(response->lane_derivatives.s, 0.);
+    ASSERT_EQ(response->lane_derivatives.r, 0.);
+    ASSERT_EQ(response->lane_derivatives.h, 0.);
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kDeriveLaneSRoutesServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::DeriveLaneSRoutes>(
+        kDeriveLaneSRoutesServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->lane_s_routes.empty());
   }
 }
 

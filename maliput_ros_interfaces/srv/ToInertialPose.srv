@@ -1,0 +1,6 @@
+# Equivalent to finding the maliput::api::Lane via the road_position.lane_id and then
+# querying the lane->ToInertialPosition(road_position.pos) and lane->GetOrientation(road_position.pos).
+RoadPosition road_position
+---
+InertialPosition position
+Rotation orientation

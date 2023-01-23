@@ -35,11 +35,15 @@
 #include <utility>
 
 #include <maliput_ros_interfaces/srv/branch_point.hpp>
+#include <maliput_ros_interfaces/srv/derive_lane_s_routes.hpp>
+#include <maliput_ros_interfaces/srv/eval_motion_derivatives.hpp>
 #include <maliput_ros_interfaces/srv/find_road_positions.hpp>
 #include <maliput_ros_interfaces/srv/junction.hpp>
 #include <maliput_ros_interfaces/srv/lane.hpp>
+#include <maliput_ros_interfaces/srv/lane_boundaries.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
 #include <maliput_ros_interfaces/srv/segment.hpp>
+#include <maliput_ros_interfaces/srv/to_inertial_pose.hpp>
 #include <maliput_ros_interfaces/srv/to_road_position.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
@@ -74,13 +78,20 @@ namespace ros {
 ///
 /// This query server offers:
 /// - /branch_point: looks for a maliput::api::BranchPoint by its ID.
+/// - /derive_lane_s_routes: derives all paths from a maliput::api::RoadPosition to another, filtering Lanes whose
+/// length is bigger than a maximum threshold.
+/// - /eval_motion_derivatives: evaluates the motion derivatives at maliput::api::RoadPosition and scales it by a
+/// certain maliput::api::IsoLaneVelocity.
 /// - /find_road_positions: finds all maliput::api::RoadPositionResult in radius distance from a
 /// maliput::api::InertialPosition.
 /// - /junction: looks for a maliput::api::Junction by its ID.
 /// - /lane: looks for a maliput::api::Lane by its ID.
+/// - /lane_boundaries: computes the maliput::api::Lane boundaries at a given maliput::api::RoadPosition.
 /// - /road_geometry: responds the maliput::api::RoadGeometry configuration.
 /// - /segment: looks for a maliput::api::Segment by its ID.
 /// - /to_road_position: maps a maliput::api::InertialPosition into a maliput::api::RoadPosition.
+/// - /to_inertial_pose: maps a maliput::api::RoadPosition into a maliput::api::InertialPosition and the
+/// maliput::api::Rotation there.
 class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
  public:
   using LifecyleNodeCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -95,11 +106,15 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
 
  private:
   static constexpr const char* kBranchPointServiceName = "branch_point";
+  static constexpr const char* kDeriveLaneSRoutes = "derive_lane_s_routes";
+  static constexpr const char* kEvalMotionDerivativesServiceName = "eval_motion_derivatives";
   static constexpr const char* kFindRoadPositionsServiceName = "find_road_positions";
   static constexpr const char* kJunctionServiceName = "junction";
   static constexpr const char* kLaneServiceName = "lane";
+  static constexpr const char* kLaneBoundariesServiceName = "lane_boundaries";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kSegmentServiceName = "segment";
+  static constexpr const char* kToInertialPoseServiceName = "to_inertial_pose";
   static constexpr const char* kToRoadPositionServiceName = "to_road_position";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
   static constexpr const char* kYamlConfigurationPathDescription =
@@ -114,6 +129,24 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::BranchPoint description.
   void BranchPointCallback(const std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Request> request,
                            std::shared_ptr<maliput_ros_interfaces::srv::BranchPoint::Response> response) const;
+
+  // @brief Derives all paths from a maliput::api::RoadPosition to another.
+  // @details See maliput::routing::DeriveLaneSRoutes for further details.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPositions and the threshold to query.
+  // @param[out] response Holds the vector maliput::api::LaneSRoutes.
+  void DeriveLaneSRoutesCallback(
+      const std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Request> request,
+      std::shared_ptr<maliput_ros_interfaces::srv::DeriveLaneSRoutes::Response> response) const;
+
+  // @brief Evaluates the motion derivatives at a given maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition and the maliput::api::IsoLaneVelocity compute the motion
+  // derivatives.
+  // @param[out] response Packs into a maliput::api::LanePosition the motion derivatives.
+  void EvalMotionDerivativesCallback(
+      const std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Request> request,
+      std::shared_ptr<maliput_ros_interfaces::srv::EvalMotionDerivatives::Response> response) const;
 
   // @brief Responds all the maliput::api::RoadPositionResults within a given radius distance from a
   // maliput::api::InertialPosition.
@@ -138,6 +171,13 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   void LaneCallback(const std::shared_ptr<maliput_ros_interfaces::srv::Lane::Request> request,
                     std::shared_ptr<maliput_ros_interfaces::srv::Lane::Response> response) const;
 
+  // @brief Responds the maliput::api::Lane boundaries at a given maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition where to evaluate the lane boundaries.
+  // @param[out] response Loads the maliput::api::Lane boundaries.
+  void LaneBoundariesCallback(const std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Request> request,
+                              std::shared_ptr<maliput_ros_interfaces::srv::LaneBoundaries::Response> response) const;
+
   // @brief Responds the maliput::api::RoadGeometry configuration.
   // @pre The node must be in the ACTIVE state.
   // @param[in] request Unused.
@@ -158,6 +198,14 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Holds the maliput::api::RoadPositionResult of the transformation.
   void ToRoadPositionCallback(const std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Request> request,
                               std::shared_ptr<maliput_ros_interfaces::srv::ToRoadPosition::Response> response) const;
+
+  // @brief Computes the INERTIAL Frame transformation of a maliput::api::RoadPosition.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::RoadPosition to transform into a maliput::api::InertialPosition and a
+  // maliput::api::Rotation.
+  // @param[out] response Holds the maliput::api::InertialPosition and the maliput::api::Rotation.
+  void ToInertialPoseCallback(const std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Request> request,
+                              std::shared_ptr<maliput_ros_interfaces::srv::ToInertialPose::Response> response) const;
 
   // @brief Loads the maliput::api::RoadNetwork from the yaml_configuration_path contents.
   // @return true When the load procedure is successful.
@@ -207,18 +255,26 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   std::atomic<bool> is_active_;
   // /branch_point service.
   rclcpp::Service<maliput_ros_interfaces::srv::BranchPoint>::SharedPtr branch_point_srv_;
+  // /derive_lane_s_route service.
+  rclcpp::Service<maliput_ros_interfaces::srv::DeriveLaneSRoutes>::SharedPtr derive_lane_s_routes_srv_;
+  // /eval_motion_derivatives service.
+  rclcpp::Service<maliput_ros_interfaces::srv::EvalMotionDerivatives>::SharedPtr eval_motion_derivatives_srv_;
   // /find_road_positions service.
   rclcpp::Service<maliput_ros_interfaces::srv::FindRoadPositions>::SharedPtr find_road_positions_srv_;
   // /junction service.
   rclcpp::Service<maliput_ros_interfaces::srv::Junction>::SharedPtr junction_srv_;
   // /lane service.
   rclcpp::Service<maliput_ros_interfaces::srv::Lane>::SharedPtr lane_srv_;
+  // /lane_boundaries service.
+  rclcpp::Service<maliput_ros_interfaces::srv::LaneBoundaries>::SharedPtr lane_boundaries_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
   // /segment service.
   rclcpp::Service<maliput_ros_interfaces::srv::Segment>::SharedPtr segment_srv_;
   // /to_road_position service.
   rclcpp::Service<maliput_ros_interfaces::srv::ToRoadPosition>::SharedPtr to_road_position_srv_;
+  // /to_inertial_pose service.
+  rclcpp::Service<maliput_ros_interfaces::srv::ToInertialPose>::SharedPtr to_inertial_pose_srv_;
   // Proxy to a maliput::api::RoadNetwork queries.
   std::unique_ptr<maliput_ros::ros::MaliputQuery> maliput_query_;
 };
