@@ -133,6 +133,7 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, ConfigureStateAdvertisesServices)
   ASSERT_STREQ(service_names_and_types[kEvalMotionDerivativesServiceName][0].c_str(),
                kEvalMotionDerivativesServiceType);
   ASSERT_STREQ(service_names_and_types[kDeriveLaneSRoutesServiceName][0].c_str(), kDeriveLaneSRoutesServiceType);
+  ASSERT_STREQ(service_names_and_types[kSampleLaneSRouteServiceName][0].c_str(), kSampleLaneSRouteServiceType);
 }
 
 // Makes sure services don't process the request when the node is not ACTIVE.
@@ -247,6 +248,16 @@ TEST_F(MaliputQueryNodeAfterConfigurationTest, CallingServiceBeforeActiveYieldsT
 
     ASSERT_NE(response, nullptr);
     ASSERT_TRUE(response->lane_s_routes.empty());
+  }
+  {
+    ASSERT_TRUE(WaitForService(dut_, kSampleLaneSRouteServiceName, kTimeout, kSleepPeriod));
+
+    auto request = std::make_shared<maliput_ros_interfaces::srv::SampleLaneSRoute::Request>();
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::SampleLaneSRoute>(
+        kSampleLaneSRouteServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->waypoints.empty());
   }
 }
 

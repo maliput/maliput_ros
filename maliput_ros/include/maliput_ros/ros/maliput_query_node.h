@@ -42,6 +42,7 @@
 #include <maliput_ros_interfaces/srv/lane.hpp>
 #include <maliput_ros_interfaces/srv/lane_boundaries.hpp>
 #include <maliput_ros_interfaces/srv/road_geometry.hpp>
+#include <maliput_ros_interfaces/srv/sample_lane_s_route.hpp>
 #include <maliput_ros_interfaces/srv/segment.hpp>
 #include <maliput_ros_interfaces/srv/to_inertial_pose.hpp>
 #include <maliput_ros_interfaces/srv/to_road_position.hpp>
@@ -114,6 +115,7 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   static constexpr const char* kLaneBoundariesServiceName = "lane_boundaries";
   static constexpr const char* kRoadGeometryServiceName = "road_geometry";
   static constexpr const char* kSegmentServiceName = "segment";
+  static constexpr const char* kSampleLaneSRouteServiceName = "sample_lane_s_route";
   static constexpr const char* kToInertialPoseServiceName = "to_inertial_pose";
   static constexpr const char* kToRoadPositionServiceName = "to_road_position";
   static constexpr const char* kYamlConfigurationPath = "yaml_configuration_path";
@@ -184,6 +186,14 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   // @param[out] response Loads the maliput::api::RoadGeometry description.
   void RoadGeometryCallback(const std::shared_ptr<maliput_ros_interfaces::srv::RoadGeometry::Request> request,
                             std::shared_ptr<maliput_ros_interfaces::srv::RoadGeometry::Response> response) const;
+
+  // @brief Samples a given maliput::api::LaneSRoute at constant distance in the LANE Frame.
+  // @pre The node must be in the ACTIVE state.
+  // @param[in] request Holds the maliput::api::LaneSRoute and the sampling distance.
+  // @param[out] response Holds a vector of maliput::api::InertialPositions.
+  void SampleLaneSRouteCallback(
+      const std::shared_ptr<maliput_ros_interfaces::srv::SampleLaneSRoute::Request> request,
+      std::shared_ptr<maliput_ros_interfaces::srv::SampleLaneSRoute::Response> response) const;
 
   // @brief Responds the maliput::api::Segment configuration.
   // @pre The node must be in the ACTIVE state.
@@ -269,6 +279,8 @@ class MaliputQueryNode final : public rclcpp_lifecycle::LifecycleNode {
   rclcpp::Service<maliput_ros_interfaces::srv::LaneBoundaries>::SharedPtr lane_boundaries_srv_;
   // /road_geometry service.
   rclcpp::Service<maliput_ros_interfaces::srv::RoadGeometry>::SharedPtr road_geometry_srv_;
+  // /sample_lane_s_route service.
+  rclcpp::Service<maliput_ros_interfaces::srv::SampleLaneSRoute>::SharedPtr sample_lane_s_route_srv_;
   // /segment service.
   rclcpp::Service<maliput_ros_interfaces::srv::Segment>::SharedPtr segment_srv_;
   // /to_road_position service.

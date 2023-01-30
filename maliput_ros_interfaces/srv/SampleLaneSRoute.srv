@@ -1,0 +1,6 @@
+# Equivalent to call maliput::api::RoadNetwork::road_geometry()->SampleAheadWaypoints(lane_s_route, path_length_sampling_rate)
+# and return the vector of maliput::api::InertialPositions.
+LaneSRoute lane_s_route
+float64 path_length_sampling_rate
+---
+InertialPosition[] waypoints

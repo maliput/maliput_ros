@@ -61,6 +61,7 @@ set(SERVICE_MSGS
   "srv/Lane.srv"
   "srv/LaneBoundaries.srv"
   "srv/RoadGeometry.srv"
+  "srv/SampleLaneSRoute.srv"
   "srv/Segment.srv"
   "srv/ToInertialPose.srv"
   "srv/ToRoadPosition.srv"

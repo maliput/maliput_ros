@@ -168,6 +168,19 @@ class MaliputQuery final {
     return maliput::routing::DeriveLaneSRoutes(start, end, max_length_m);
   }
 
+  /// Samples in the LANE Frame the @p lane_s_route at constant @p path_length_sampling_rate.
+  /// @param[in] lane_s_route The maliput::api::LaneSRoute to sample.
+  /// @param[in] path_length_sampling_rate The distance in LANE Frame between samples along the centerline of @p
+  /// lane_s_route. It must be positive.
+  /// @return A vector of maliput::api::InertialPosition with the sampled waypoints. When @p path_length_sampling_rate
+  /// is negative, it returns an empty vector.
+  inline std::vector<maliput::api::InertialPosition> SampleAheadWaypoints(const maliput::api::LaneSRoute& lane_s_route,
+                                                                          double path_length_sampling_rate) const {
+    return path_length_sampling_rate <= 0.
+               ? std::vector<maliput::api::InertialPosition>{}
+               : road_network_->road_geometry()->SampleAheadWaypoints(lane_s_route, path_length_sampling_rate);
+  }
+
  private:
   std::unique_ptr<maliput::api::RoadNetwork> road_network_{};
 };

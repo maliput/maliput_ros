@@ -140,6 +140,77 @@ TEST_F(DeriveLaneSRoutesServiceTest, InvalidRequest) {
   }
 }
 
+// Test class to wrap the tests of /sample_lane_s_route service call.
+class SampleLaneSRouteServiceTest : public MaliputQueryNodeAfterConfigurationTest {
+ public:
+  const maliput::api::LaneId kLaneId{"lane_id"};
+  const maliput::api::LaneSRange kLaneSRange{kLaneId, maliput::api::SRange{10., 20.}};
+  const maliput::api::LaneSRoute kLaneSRoute{{kLaneSRange}};
+  const maliput::api::InertialPosition kInertialPosition1{10., 5., 1.};
+  const maliput::api::InertialPosition kInertialPosition2{15., 5., 1.};
+  const maliput::api::InertialPosition kInertialPosition3{20., 5., 1.};
+  const std::vector<maliput::api::InertialPosition> kExpectedResult{kInertialPosition1, kInertialPosition2,
+                                                                    kInertialPosition3};
+  static constexpr double kPathLengthSamplingRate{5.};
+
+  void SetUp() override {
+    MaliputQueryNodeAfterConfigurationTest::SetUp();
+    AddNodeToExecutorAndSpin(dut_);
+    TransitionToConfigureFromUnconfigured();
+    TransitionToActiveFromConfigured();
+  }
+};
+
+TEST_F(SampleLaneSRouteServiceTest, ValidRequestAndResponse) {
+  EXPECT_CALL(*(road_network_ptrs_.road_geometry), DoSampleAheadWaypoints(::testing::_, kPathLengthSamplingRate))
+      .WillRepeatedly(Return(kExpectedResult));
+  auto request = std::make_shared<maliput_ros_interfaces::srv::SampleLaneSRoute::Request>();
+  request->lane_s_route = maliput_ros_translation::ToRosMessage(kLaneSRoute);
+  request->path_length_sampling_rate = kPathLengthSamplingRate;
+
+  auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::SampleLaneSRoute>(kSampleLaneSRouteServiceName,
+                                                                                         kTimeoutServiceCall, request);
+
+  ASSERT_NE(response, nullptr);
+  ASSERT_EQ(response->waypoints.size(), 3u);
+  ASSERT_EQ(response->waypoints[0].x, kInertialPosition1.x());
+  ASSERT_EQ(response->waypoints[0].y, kInertialPosition1.y());
+  ASSERT_EQ(response->waypoints[0].z, kInertialPosition1.z());
+  ASSERT_EQ(response->waypoints[1].x, kInertialPosition2.x());
+  ASSERT_EQ(response->waypoints[1].y, kInertialPosition2.y());
+  ASSERT_EQ(response->waypoints[1].z, kInertialPosition2.z());
+  ASSERT_EQ(response->waypoints[2].x, kInertialPosition3.x());
+  ASSERT_EQ(response->waypoints[2].y, kInertialPosition3.y());
+  ASSERT_EQ(response->waypoints[2].z, kInertialPosition3.z());
+}
+
+TEST_F(SampleLaneSRouteServiceTest, InvalidRequest) {
+  // Invalid LaneSRoute.
+  {
+    auto request = std::make_shared<maliput_ros_interfaces::srv::SampleLaneSRoute::Request>();
+    request->path_length_sampling_rate = kPathLengthSamplingRate;
+
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::SampleLaneSRoute>(
+        kSampleLaneSRouteServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->waypoints.empty());
+  }
+  // Invalid sampling rate.
+  {
+    static constexpr double kInvalidPathLengthSamplingRate{-1.};
+    auto request = std::make_shared<maliput_ros_interfaces::srv::SampleLaneSRoute::Request>();
+    request->lane_s_route = maliput_ros_translation::ToRosMessage(kLaneSRoute);
+    request->path_length_sampling_rate = kInvalidPathLengthSamplingRate;
+
+    auto response = MakeAsyncRequestAndWait<maliput_ros_interfaces::srv::SampleLaneSRoute>(
+        kSampleLaneSRouteServiceName, kTimeoutServiceCall, request);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_TRUE(response->waypoints.empty());
+  }
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace ros
