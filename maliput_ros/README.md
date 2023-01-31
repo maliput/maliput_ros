@@ -118,4 +118,4 @@ Please see [CONTRIBUTING](https://maliput.readthedocs.io/en/latest/contributing.
 
 ## License
 
-[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/maliput/ros2_maliput/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/maliput/ros2_maliput/blob/main/maliput_ros/LICENSE)
