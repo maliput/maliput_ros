@@ -2,8 +2,8 @@
 Changelog for package maliput_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2023-04-17)
+------------------
 * Adds READMEs to the packages. (`#24 <https://github.com/maliput/ros2_maliput/issues/24>`_)
 * Sample lane s route (`#21 <https://github.com/maliput/ros2_maliput/issues/21>`_)
 * Routing service (`#20 <https://github.com/maliput/ros2_maliput/issues/20>`_)
